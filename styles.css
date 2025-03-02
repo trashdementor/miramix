@@ -124,7 +124,7 @@ form label {
     color: #66FCF1;
 }
 
-form input, form select {
+form input, form select, form textarea {
     width: 100%;
     max-width: 300px;
     padding: 5px;
@@ -132,6 +132,11 @@ form input, form select {
     background-color: #C5C6C7;
     border: none;
     border-radius: 4px;
+}
+
+form textarea {
+    height: 100px;
+    resize: vertical;
 }
 
 form button {
@@ -237,7 +242,7 @@ form button {
         width: 100%;
     }
 
-    form input, form select {
+    form input, form select, form textarea {
         max-width: 100%;
     }
 
