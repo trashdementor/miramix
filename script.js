@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', function() {
             objectStore = event.target.transaction.objectStore('content');
         }
 
-        // Добавляем новые индексы, если их нет
         if (!objectStore.indexNames.contains('genre')) {
             objectStore.createIndex('genre', 'genre', { unique: false });
         }
@@ -260,11 +259,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const modal = document.getElementById('edit-modal');
             modal.style.display = 'block';
+            document.body.classList.add('modal-open'); // Блокируем прокрутку фона
         };
     };
 
     document.getElementById('close-modal').addEventListener('click', function() {
         document.getElementById('edit-modal').style.display = 'none';
+        document.body.classList.remove('modal-open'); // Разблокируем прокрутку фона
     });
 
     document.getElementById('edit-resource-form').addEventListener('submit', async function(e) {
@@ -337,6 +338,7 @@ document.addEventListener('DOMContentLoaded', function() {
             requestUpdate.onsuccess = function() {
                 alert('Ресурс обновлён');
                 document.getElementById('edit-modal').style.display = 'none';
+                document.body.classList.remove('modal-open'); // Разблокируем прокрутку фона
                 loadTopContent();
                 setupSearch(type);
             };
