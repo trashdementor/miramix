@@ -369,6 +369,79 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
+    // Экспорт данных
+    document.getElementById('export-btn').addEventListener('click', function() {
+        if (!db) {
+            alert('База данных ещё не готова.');
+            return;
+        }
+
+        const transaction = db.transaction(['content'], 'readonly');
+        const objectStore = transaction.objectStore('content');
+        const request = objectStore.getAll();
+
+        request.onsuccess = function(event) {
+            const data = event.target.result;
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'miramix_data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert('Данные экспортированы в файл miramix_data.json');
+        };
+    });
+
+    // Импорт данных
+    document.getElementById('import-btn').addEventListener('click', function() {
+        document.getElementById('import-file').click();
+    });
+
+    document.getElementById('import-file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            try {
+                const data = JSON.parse(event.target.result);
+                if (!Array.isArray(data)) {
+                    alert('Неверный формат файла. Ожидается массив данных.');
+                    return;
+                }
+
+                const transaction = db.transaction(['content'], 'readwrite');
+                const objectStore = transaction.objectStore('content');
+
+                // Очищаем текущие данные
+                objectStore.clear().onsuccess = function() {
+                    // Добавляем импортированные данные
+                    data.forEach(item => {
+                        objectStore.add(item);
+                    });
+
+                    transaction.oncomplete = function() {
+                        alert('Данные успешно импортированы');
+                        loadTopContent();
+                        setupSearch(document.querySelector('.section:not([style*="display: none"])').id);
+                    };
+                    transaction.onerror = function(event) {
+                        console.error('Ошибка при импорте:', event.target.error);
+                        alert('Ошибка при импорте данных');
+                    };
+                };
+            } catch (error) {
+                console.error('Ошибка парсинга JSON:', error);
+                alert('Ошибка при чтении файла: ' + error.message);
+            }
+        };
+        reader.readAsText(file);
+    });
+
     // Топ контент
     function loadTopContent() {
         if (!db) return;
