@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     let db;
-    const request = indexedDB.open('MiraMIXDB', 3); // Увеличиваю версию для новых полей
+    const request = indexedDB.open('MiraMIXDB', 3);
 
     request.onerror = function(event) {
         console.error('Ошибка IndexedDB:', event.target.errorCode);
@@ -14,18 +14,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
     request.onupgradeneeded = function(event) {
         db = event.target.result;
-        const objectStore = db.createObjectStore('content', { keyPath: 'id', autoIncrement: true });
-        objectStore.createIndex('type', 'type', { unique: false });
-        objectStore.createIndex('status', 'status', { unique: false });
-        objectStore.createIndex('title', 'title', { unique: false });
-        objectStore.createIndex('characteristics', 'characteristics', { unique: false });
-        objectStore.createIndex('rating', 'rating', { unique: false });
-        objectStore.createIndex('image', 'image', { unique: false });
-        objectStore.createIndex('genre', 'genre', { unique: false });
-        objectStore.createIndex('year', 'year', { unique: false });
-        objectStore.createIndex('country', 'country', { unique: false });
-        objectStore.createIndex('author', 'author', { unique: false });
-        objectStore.createIndex('description', 'description', { unique: false });
+        let objectStore;
+
+        if (!db.objectStoreNames.contains('content')) {
+            objectStore = db.createObjectStore('content', { keyPath: 'id', autoIncrement: true });
+            objectStore.createIndex('type', 'type', { unique: false });
+            objectStore.createIndex('status', 'status', { unique: false });
+            objectStore.createIndex('title', 'title', { unique: false });
+            objectStore.createIndex('characteristics', 'characteristics', { unique: false });
+            objectStore.createIndex('rating', 'rating', { unique: false });
+            objectStore.createIndex('image', 'image', { unique: false });
+        } else {
+            objectStore = event.target.transaction.objectStore('content');
+        }
+
+        // Добавляем новые индексы, если их нет
+        if (!objectStore.indexNames.contains('genre')) {
+            objectStore.createIndex('genre', 'genre', { unique: false });
+        }
+        if (!objectStore.indexNames.contains('year')) {
+            objectStore.createIndex('year', 'year', { unique: false });
+        }
+        if (!objectStore.indexNames.contains('country')) {
+            objectStore.createIndex('country', 'country', { unique: false });
+        }
+        if (!objectStore.indexNames.contains('author')) {
+            objectStore.createIndex('author', 'author', { unique: false });
+        }
+        if (!objectStore.indexNames.contains('description')) {
+            objectStore.createIndex('description', 'description', { unique: false });
+        }
     };
 
     // Навигация
@@ -228,7 +246,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const item = event.target.result;
             if (!item) return;
 
-            // Заполняем форму редактирования
             document.getElementById('edit-id').value = item.id;
             document.getElementById('edit-type').value = item.type;
             document.getElementById('edit-title').value = item.title;
@@ -241,18 +258,15 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit-characteristics').value = item.characteristics[0] || '';
             document.getElementById('edit-rating').value = item.rating;
 
-            // Показываем модальное окно
             const modal = document.getElementById('edit-modal');
             modal.style.display = 'block';
         };
     };
 
-    // Закрытие модального окна
     document.getElementById('close-modal').addEventListener('click', function() {
         document.getElementById('edit-modal').style.display = 'none';
     });
 
-    // Сохранение изменений
     document.getElementById('edit-resource-form').addEventListener('submit', async function(e) {
         e.preventDefault();
         if (!db) return;
