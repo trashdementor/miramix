@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'programs': prefix = 'program'; break;
             case 'recipes': prefix = 'recipe'; break;
             case 'sites': prefix = 'site'; break;
-            default: prefix = type;
+            default: return; // Прерываем, если это не раздел с поиском
         }
 
         const statusEl = document.getElementById(`${prefix}-status`);
@@ -427,7 +427,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     transaction.oncomplete = function() {
                         alert('Данные успешно импортированы');
                         loadTopContent();
-                        setupSearch(document.querySelector('.section:not([style*="display: none"])').id);
+                        // Проверяем текущий раздел перед вызовом setupSearch
+                        const currentSection = document.querySelector('.section:not([style*="display: none"])').id;
+                        if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(currentSection)) {
+                            setupSearch(currentSection);
+                        }
                     };
                     transaction.onerror = function(event) {
                         console.error('Ошибка при импорте:', event.target.error);
