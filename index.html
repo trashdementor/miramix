@@ -513,6 +513,16 @@
                 </select>
                 <label for="resource-title">Название:</label>
                 <input type="text" id="resource-title" required>
+                <label for="resource-genre">Жанр:</label>
+                <input type="text" id="resource-genre" placeholder="Например, Драма">
+                <label for="resource-year">Год:</label>
+                <input type="number" id="resource-year" placeholder="Например, 2023" min="1900" max="2100">
+                <label for="resource-country">Страна:</label>
+                <input type="text" id="resource-country" placeholder="Например, США">
+                <label for="resource-author">Автор/Разработчик:</label>
+                <input type="text" id="resource-author" placeholder="Например, Дж. Р. Р. Толкин">
+                <label for="resource-description">Описание:</label>
+                <textarea id="resource-description" placeholder="Краткое описание"></textarea>
                 <label for="resource-image">Изображение:</label>
                 <input type="file" id="resource-image" accept=".jpg,.jpeg,.png,.gif,.webp">
                 <label for="resource-status">Статус:</label>
@@ -552,13 +562,23 @@
     <!-- Модальное окно для редактирования -->
     <div id="edit-modal" class="modal" style="display: none;">
         <div class="modal-content">
-            <span id="close-modal" class="close">&times;</span>
+            <span id="close-modal" class="close">×</span>
             <h3>Редактировать ресурс</h3>
             <form id="edit-resource-form">
                 <input type="hidden" id="edit-id">
                 <input type="hidden" id="edit-type">
                 <label for="edit-title">Название:</label>
                 <input type="text" id="edit-title" required>
+                <label for="edit-genre">Жанр:</label>
+                <input type="text" id="edit-genre" placeholder="Например, Драма">
+                <label for="edit-year">Год:</label>
+                <input type="number" id="edit-year" placeholder="Например, 2023" min="1900" max="2100">
+                <label for="edit-country">Страна:</label>
+                <input type="text" id="edit-country" placeholder="Например, США">
+                <label for="edit-author">Автор/Разработчик:</label>
+                <input type="text" id="edit-author" placeholder="Например, Дж. Р. Р. Толкин">
+                <label for="edit-description">Описание:</label>
+                <textarea id="edit-description" placeholder="Краткое описание"></textarea>
                 <label for="edit-image">Изображение:</label>
                 <input type="file" id="edit-image" accept=".jpg,.jpeg,.png,.gif,.webp">
                 <label for="edit-status">Статус:</label>
