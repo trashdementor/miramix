@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>МираMIX</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="images/logo.png" alt="Логотип" id="logo">
+        </div>
+        <nav>
+            <ul>
+                <li class="dropdown">
+                    <a href="#catalog">Каталог</a>
+                    <div class="dropdown-content">
+                        <a href="#films">Фильмы</a>
+                        <a href="#cartoons">Мультфильмы</a>
+                        <a href="#series">Сериалы</a>
+                        <a href="#cartoon-series">Мультсериалы</a>
+                        <a href="#books">Книги</a>
+                        <a href="#music">Музыка</a>
+                        <a href="#games">Игры</a>
+                        <a href="#programs">Программы</a>
+                        <a href="#recipes">Рецепты</a>
+                        <a href="#sites">Сайты</a>
+                    </div>
+                </li>
+                <li class="dropdown">
+                    <a href="#recommendations">Рекомендации</a>
+                    <div class="dropdown-content">
+                        <a href="#rec-films">Фильмы</a>
+                        <a href="#rec-cartoons">Мультфильмы</a>
+                        <a href="#rec-series">Сериалы</a>
+                        <a href="#rec-cartoon-series">Мультсериалы</a>
+                        <a href="#rec-books">Книги</a>
+                        <a href="#rec-music">Музыка</a>
+                        <a href="#rec-games">Игры</a>
+                        <a href="#rec-programs">Программы</a>
+                        <a href="#rec-recipes">Рецепты</a>
+                        <a href="#rec-sites">Сайты</a>
+                    </div>
+                </li>
+                <li><a href="#settings"><img src="images/settings.png" alt="Настройки" class="settings-icon"></a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div id="top" class="section">
+            <h2>ТОП</h2>
+            <div id="top-films">
+                <h3>Фильмы</h3>
+                <div class="content-list" id="top-films-list"></div>
+            </div>
+            <div id="top-cartoons">
+                <h3>Мультфильмы</h3>
+                <div class="content-list" id="top-cartoons-list"></div>
+            </div>
+            <div id="top-series">
+                <h3>Сериалы</h3>
+                <div class="content-list" id="top-series-list"></div>
+            </div>
+            <div id="top-cartoon-series">
+                <h3>Мультсериалы</h3>
+                <div class="content-list" id="top-cartoon-series-list"></div>
+            </div>
+            <div id="top-books">
+                <h3>Книги</h3>
+                <div class="content-list" id="top-books-list"></div>
+            </div>
+            <div id="top-music">
+                <h3>Музыка</h3>
+                <div class="content-list" id="top-music-list"></div>
+            </div>
+            <div id="top-games">
+                <h3>Игры</h3>
+                <div class="content-list" id="top-games-list"></div>
+            </div>
+            <div id="top-programs">
+                <h3>Программы</h3>
+                <div class="content-list" id="top-programs-list"></div>
+            </div>
+            <div id="top-recipes">
+                <h3>Рецепты</h3>
+                <div class="content-list" id="top-recipes-list"></div>
+            </div>
+            <div id="top-sites">
+                <h3>Сайты</h3>
+                <div class="content-list" id="top-sites-list"></div>
+            </div>
+        </div>
+        <div id="catalog" class="section" style="display: none;">Каталог</div>
+        <div id="recommendations" class="section" style="display: none;">Рекомендации</div>
+        <div id="films" class="section" style="display: none;">
+            <h2>Фильмы</h2>
+            <div class="search-menu">
+                <label for="film-status">Статус:</label>
+                <select id="film-status">
+                    <option value="">Все</option>
+                    <option value="🌕">🌕 Просмотрено</option>
+                    <option value="🌗">🌗 В процессе</option>
+                    <option value="🌑">🌑 Не просмотрено</option>
+                </select>
+                <label for="film-title">Название:</label>
+                <input type="text" id="film-title" placeholder="Введите название">
+                <label for="film-genre">Жанр:</label>
+                <input type="text" id="film-genre" placeholder="Например, Драма">
+                <label for="film-year">Год:</label>
+                <input type="number" id="film-year" placeholder="Например, 2023" min="1900" max="2100">
+                <label for="film-country">Страна:</label>
+                <input type="text" id="film-country" placeholder="Например, США">
+                <label for="film-author">Режиссёр:</label>
+                <input type="text" id="film-author" placeholder="Например, Кэмерон">
+                <label for="film-description">Описание:</label>
+                <input type="text" id="film-description" placeholder="Краткое описание">
+                <label for="film-characteristics">Характеристика:</label>
+                <select id="film-characteristics">
+                    <option value="">Любая</option>
+                    <option value="🪔">🪔 Религиозное</option>
+                    <option value="🔮">🔮 Философское</option>
+                    <option value="🧠">🧠 Немного напрячь мозги</option>
+                    <option value="⚰️">⚰️ Больше никогда не смотреть</option>
+                    <option value="☕">☕ На вечер</option>
+                    <option value="🌹">🌹 Романтическое</option>
+                    <option value="🍷">🍷 Про жизнь</option>
+                    <option value="🦋">🦋 На один раз</option>
+                </select>
+                <label for="film-rating">Оценка:</label>
+                <select id="film-rating">
+                    <option value="">Любая</option>
+                    <option value="💀">💀 0</option>
+                    <option value="💩">💩 1</option>
+                    <option value="🍋">🍋 2</option>
+                    <option value="🍅">🍅 3</option>
+                    <option value="🍊">🍊 4</option>
+                    <option value="🍒">🍒 5</option>
+                    <option value="🌽">🌽 6</option>
+                    <option value="🧅">🧅 7</option>
+                </select>
+                <button id="film-search-btn">Поиск</button>
+            </div>
+            <div class="content-list" id="film-content-list"></div>
+        </div>
+        <div id="cartoons" class="section" style="display: none;">
+            <h2>Мультфильмы</h2>
+            <div class="search-menu">
+                <label for="cartoon-status">Статус:</label>
+                <select id="cartoon-status">
+                    <option value="">Все</option>
+                    <option value="🌕">🌕 Просмотрено</option>
+                    <option value="🌗">🌗 В процессе</option>
+                    <option value="🌑">🌑 Не просмотрено</option>
+                </select>
+                <label for="cartoon-title">Название:</label>
+                <input type="text" id="cartoon-title" placeholder="Введите название">
+                <label for="cartoon-genre">Жанр:</label>
+                <input type="text" id="cartoon-genre" placeholder="Например, Комедия">
+                <label for="cartoon-year">Год:</label>
+                <input type="number" id="cartoon-year" placeholder="Например, 2023" min="1900" max="2100">
+                <label for="cartoon-country">Страна:</label>
+                <input type="text" id="cartoon-country" placeholder="Например, США">
+                <label for="cartoon-author">Режиссёр:</label>
+                <input type="text" id="cartoon-author" placeholder="Например, Пиксар">
+                <label for="cartoon-description">Описание:</label>
+                <input type="text" id="cartoon-description" placeholder="Краткое описание">
+                <label for="cartoon-characteristics">Характеристика:</label>
+                <select id="cartoon-characteristics">
+                    <option value="">Любая</option>
+                    <option value="🪔">🪔 Религиозное</option>
+                    <option value="🔮">🔮 Философское</option>
+                    <option value="🧠">🧠 Немного напрячь мозги</option>
+                    <option value="⚰️">⚰️ Больше никогда не смотреть</option>
+                    <option value="☕">☕ На вечер</option>
+                    <option value="🌹">🌹 Романтическое</option>
+                    <option value="🍷">🍷 Про жизнь</option>
+                    <option value="🦋">🦋 На один раз</option>
+                </select>
+                <label for="cartoon-rating">Оценка:</label>
+                <select id="cartoon-rating">
+                    <option value="">Любая</option>
+                    <option value="💀">💀 0</option>
+                    <option value="💩">💩 1</option>
+                    <option value="🍋">🍋 2</option>
+                    <option value="🍅">🍅 3</option>
+                    <option value="🍊">🍊 4</option>
+                    <option value="🍒">🍒 5</option>
+                    <option value="🌽">🌽 6</option>
+                    <option value="🧅">🧅 7</option>
+                </select>
+                <button id="cartoon-search-btn">Поиск</button>
+            </div>
+            <div class="content-list" id="cartoon-content-list"></div>
+        </div>
+        <div id="series" class="section" style="display: none;">
+            <h2>Сериалы</h2>
+            <div class="search-menu">
+                <label for="series-status">Статус:</label>
+                <select id="series-status">
+                    <option value="">Все</option>
+                    <option value="🌕">🌕 Просмотрено</option>
+                    <option value="🌗">🌗 В процессе</option>
+                    <option value="🌑">🌑 Не просмотрено</option>
+                </select>
+                <label for="series-title">Название:</label>
+                <input type="text" id="series-title" placeholder="Введите название">
+                <label for="series-genre">Жанр:</label>
+                <input type="text" id="series-genre" placeholder="Например, Фантастика">
+                <label for="series-year">Год:</label>
+                <input type="number" id="series-year" placeholder="Например, 2023" min="1900" max="2100">
+                <label for="series-country">Страна:</label>
+                <input type="text" id="series-country" placeholder="Например, США">
+                <label for="series-author">Режиссёр:</label>
+                <input type="text" id="series-author" placeholder="Например, Нолан">
+                <label for="series-description">Описание:</label>
+                <input type="text" id="series-description" placeholder="Краткое описание">
+                <label for="series-characteristics">Характеристика:</label>
+                <select id="series-characteristics">
+                    <option value="">Любая</option>
+                    <option value="🪔">🪔 Религиозное</option>
+                    <option value="🔮">🔮 Философское</option>
+                    <option value="🧠">🧠 Немного напрячь мозги</option>
+                    <option value="⚰️">⚰️ Больше никогда не смотреть</option>
+                    <option value="☕">☕ На вечер</option>
+                    <option value="🌹">🌹 Романтическое</option>
+                    <option value="🍷">🍷 Про жизнь</option>
+                    <option value="🦋">🦋 На один раз</option>
+                </select>
+                <label for="series-rating">Оценка:</label>
+                <select id="series-rating">
+                    <option value="">Любая</option>
+                    <option value="💀">💀 0</option>
+                    <option value="💩">💩 1</option>
+                    <option value="🍋">🍋 2</option>
+                    <option value="🍅">🍅 3</option>
+                    <option value="🍊">🍊 4</option>
+                    <option value="🍒">🍒 5</option>
+                    <option value="🌽">🌽 6</option>
+                    <option value="🧅">🧅 7</option>
+                </select>
+                <button id="series-search-btn">Поиск</button>
+            </div>
+            <div class="content-list" id="series-content-list"></div>
+        </div>
+        <div id="cartoon-series" class="section" style="display: none;">
+            <h2>Мультсериалы</h2>
+            <div class="search-menu">
+                <label for="cartoon-series-status">Статус:</label>
+                <select id="cartoon-series-status">
+                    <option value="">Все</option>
+                    <option value="🌕">🌕 Просмотрено</option>
+                    <option value="🌗">🌗 В процессе</option>
+                    <option value="🌑">🌑 Не просмотрено</option>
+                </select>
+                <label for="cartoon-series-title">Название:</label>
+                <input type="text" id="cartoon-series-title" placeholder="Введите название">
+                <label for="cartoon-series-genre">Жанр:</label>
+                <input type="text" id="cartoon-series-genre" placeholder="Например, Приключения">
+                <label for="cartoon-series-year">Год:</label>
+                <input type="number" id="cartoon-series-year" placeholder="Например, 2023" min="1900" max="2100">
+                <label for="cartoon-series-country">Страна:</label>
+                <input type="text" id="cartoon-series-country" placeholder="Например, США">
+                <label for="cartoon-series-author">Режиссёр:</label>
+                <input type="text" id="cartoon-series-author" placeholder="Например, Тартаковский">
+                <label for="cartoon-series-description">Описание:</label>
+                <input type="text" id="cartoon-series-description" placeholder="Краткое описание">
+                <label for="cartoon-series-characteristics">Характеристика:</label>
+                <select id="cartoon-series-characteristics">
+                    <option value="">Любая</option>
+                    <option value="🪔">🪔 Религиозное</option>
+                    <option value="🔮">🔮 Философское</option>
+                    <option value="🧠">🧠 Немного напрячь мозги</option>
+                    <option value="⚰️">⚰️ Больше никогда не смотреть</option>
+                    <option value="☕">☕ На вечер</option>
+                    <option value="🌹">🌹 Романтическое</option>
+                    <option value="🍷">🍷 Про жизнь</option>
+                    <option value="🦋">🦋 На один раз</option>
+                </select>
+                <label for="cartoon-series-rating">Оценка:</label>
+                <select id="cartoon-series-rating">
+                    <option value="">Любая</option>
+                    <option value="💀">💀 0</option>
+                    <option value="💩">💩 1</option>
+                    <option value="🍋">🍋 2</option>
+                    <option value="🍅">🍅 3</option>
+                    <option value="🍊">🍊 4</option>
+                    <option value="🍒">🍒 5</option>
+                    <option value="🌽">🌽 6</option>
+                    <option value="🧅">🧅 7</option>
+                </select>
+                <button id="cartoon-series-search-btn">Поиск</button>
+            </div>
+            <div class="content-list" id="cartoon-series-content-list"></div>
+        </div>
+        <div id="books" class="section" style="display: none;">
+            <h2>Книги</h2>
+            <div class="search-menu">
+                <label for="book-status">Статус:</label>
+                <select id="book-status">
+                    <option value="">Все</option>
+                    <option value="🌕">🌕 Прочитано</option>
+                    <option value="🌗">🌗 В процессе</option>
+                    <option value="🌑">🌑 Не прочитано</option>
+                </select>
+                <label for="book-title">Название:</label>
+                <input type="text" id="book-title" placeholder="Введите название">
+                <label for="book-genre">Жанр:</label>
+                <input type="text" id="book-genre" placeholder="Например, Фэнтези">
+                <label for="book-year">Год:</label>
+                <input type="number" id="book-year" placeholder="Например, 2023" min="1900" max="2100">
+                <label for="book-country">Страна:</label>
+                <input type="text" id="book-country" placeholder="Например, Великобритания">
+                <label for="book-author">Автор:</label>
+                <input type="text" id="book-author" placeholder="Например, Толкин">
+                <label for="book-description">Описание:</label>
+                <input type="text" id="book-description" placeholder="Краткое описание">
+                <label for="book-characteristics">Характеристика:</label>
+                <select id="book-characteristics">
+                    <option value="">Любая</option>
+                    <option value="🪔">🪔 Религиозное</option>
+                    <option value="🔮">🔮 Философское</option>
+                    <option value="🧠">🧠 Немного напрячь мозги</option>
+                    <option value="⚰️">⚰️ Больше никогда не смотреть</option>
+                    <option value="☕">☕ На вечер</option>
+                    <option value="🌹">🌹 Романтическое</option>
+                    <option value="🍷">🍷 Про жизнь</option>
+                    <option value="🦋">🦋 На один раз</option>
+                </select>
+                <label for="book-rating">Оценка:</label>
+                <select id="book-rating">
+                    <option value="">Любая</option>
+                    <option value="💀">💀 0</option>
+                    <option value="💩">💩 1</option>
+                    <option value="🍋">🍋 2</option>
+                    <option value="🍅">🍅 3</option>
+                    <option value="🍊">🍊 4</option>
+                    <option value="🍒">🍒 5</option>
+                    <option value="🌽">🌽 6</option>
+                    <option value="🧅">🧅 7</option>
+                </select>
+                <button id="book-search-btn">Поиск</button>
+            </div>
+            <div class="content-list" id="book-content-list"></div>
+        </div>
+        <div id="music" class="section" style="display: none;">
+            <h2>Музыка</h2>
+            <div class="search-menu">
+                <label for="music-status">Статус:</label>
+                <select id="music-status">
+                    <option value="">Все</option>
+                    <option value="🌕">🌕 Прослушано</option>
+                    <option value="🌗">🌗 В процессе</option>
+                    <option value="🌑">🌑 Не прослушано</option>
+                </select>
+                <label for="music-title">Название:</label>
+                <input type="text" id="music-title" placeholder="Введите название">
+                <label for="music-genre">Жанр:</label>
+                <input type="text" id="music-genre" placeholder="Например, Рок">
+                <label for="music-year">Год:</label>
+                <input type="number" id="music-year" placeholder="Например, 2023" min="1900" max="2100">
+                <label for="music-country">Страна:</label>
+                <input type="text" id="music-country" placeholder="Например, США">
+                <label for="music-author">Автор:</label>
+                <input type="text" id="music-author" placeholder="Например, Битлз">
+                <label for="music-description">Описание:</label>
+                <input type="text" id="music-description" placeholder="Краткое описание">
+                <label for="music-characteristics">Характеристика:</label>
+                <select id="music-characteristics">
+                    <option value="">Любая</option>
+                    <option value="🪔">🪔 Религиозное</option>
+                    <option value="🔮">🔮 Философское</option>
+                    <option value="🧠">🧠 Немного напрячь мозги</option>
+                    <option value="⚰️">⚰️ Больше никогда не смотреть</option>
+                    <option value="☕">☕ На вечер</option>
+                    <option value="🌹">🌹 Романтическое</option>
+                    <option value="🍷">🍷 Про жизнь</option>
+                    <option value="🦋">🦋 На один раз</option>
+                </select>
+                <label for="music-rating">Оценка:</label>
+                <select id="music-rating">
+                    <option value="">Любая</option>
+                    <option value="💀">💀 0</option>
+                    <option value="💩">💩 1</option>
+                    <option value="🍋">🍋 2</option>
+                    <option value="🍅">🍅 3</option>
+                    <option value="🍊">🍊 4</option>
+                    <option value="🍒">🍒 5</option>
+                    <option value="🌽">🌽 6</option>
+                    <option value="🧅">🧅 7</option>
+                </select>
+                <button id="music-search-btn">Поиск</button>
+            </div>
+            <div class="content-list" id="music-content-list"></div>
+        </div>
+        <div id="games" class="section" style="display: none;">
+            <h2>Игры</h2>
+            <div class="search-menu">
+                <label for="game-status">Статус:</label>
+                <select id="game-status">
+                    <option value="">Все</option>
+                    <option value="🌕">🌕 Скачано</option>
+                    <option value="🌗">🌗 В процессе</option>
+                    <option value="🌑">🌑 Не скачано</option>
+                </select>
+                <label for="game-title">Название:</label>
+                <input type="text" id="game-title" placeholder="Введите название">
+                <label for="game-genre">Жанр:</label>
+                <input type="text" id="game-genre" placeholder="Например, Шутер">
+                <label for="game-year">Год:</label>
+                <input type="number" id="game-year" placeholder="Например, 2023" min="1900" max="2100">
+                <label for="game-country">Страна:</label>
+                <input type="text" id="game-country" placeholder="Например, Япония">
+                <label for="game-author">Разработчик:</label>
+                <input type="text" id="game-author" placeholder="Например, id Software">
+                <label for="game-description">Описание:</label>
+                <input type="text" id="game-description" placeholder="Краткое описание">
+                <label for="game-characteristics">Характеристика:</label>
+                <select id="game-characteristics">
+                    <option value="">Любая</option>
+                    <option value="🪔">🪔 Религиозное</option>
+                    <option value="🔮">🔮 Философское</option>
+                    <option value="🧠">🧠 Немного напрячь мозги</option>
+                    <option value="⚰️">⚰️ Больше никогда не смотреть</option>
+                    <option value="☕">☕ На вечер</option>
+                    <option value="🌹">🌹 Романтическое</option>
+                    <option value="🍷">🍷 Про жизнь</option>
+                    <option value="🦋">🦋 На один раз</option>
+                </select>
+                <label for="game-rating">Оценка:</label>
+                <select id="game-rating">
+                    <option value="">Любая</option>
+                    <option value="💀">💀 0</option>
+                    <option value="💩">💩 1</option>
+                    <option value="🍋">🍋 2</option>
+                    <option value="🍅">🍅 3</option>
+                    <option value="🍊">🍊 4</option>
+                    <option value="🍒">🍒 5</option>
+                    <option value="🌽">🌽 6</option>
+                    <option value="🧅">🧅 7</option>
+                </select>
+                <button id="game-search-btn">Поиск</button>
+            </div>
+            <div class="content-list" id="game-content-list"></div>
+        </div>
+        <div id="programs" class="section" style="display: none;">
+            <h2>Программы</h2>
+            <div class="search-menu">
+                <label for="program-status">Статус:</label>
+                <select id="program-status">
+                    <option value="">Все</option>
+                    <option value="🌕">🌕 Скачано</option>
+                    <option value="🌗">🌗 В процессе</option>
+                    <option value="🌑">🌑 Не скачано</option>
+                </select>
+                <label for="program-title">Название:</label>
+                <input type="text" id="program-title" placeholder="Введите название">
+                <label for="program-genre">Жанр:</label>
+                <input type="text" id="program-genre" placeholder="Например, Утилита">
+                <label for="program-year">Год:</label>
+                <input type="number" id="program-year" placeholder="Например, 2023" min="1900" max="2100">
+                <label for="program-country">Страна:</label>
+                <input type="text" id="program-country" placeholder="Например, США">
+                <label for="program-author">Разработчик:</label>
+                <input type="text" id="program-author" placeholder="Например, Microsoft">
+                <label for="program-description">Описание:</label>
+                <input type="text" id="program-description" placeholder="Краткое описание">
+                <label for="program-characteristics">Характеристика:</label>
+                <select id="program-characteristics">
+                    <option value="">Любая</option>
+                    <option value="🪔">🪔 Религиозное</option>
+                    <option value="🔮">🔮 Философское</option>
+                    <option value="🧠">🧠 Немного напрячь мозги</option>
+                    <option value="⚰️">⚰️ Больше никогда не смотреть</option>
+                    <option value="☕">☕ На вечер</option>
+                    <option value="🌹">🌹 Романтическое</option>
+                    <option value="🍷">🍷 Про жизнь</option>
+                    <option value="🦋">🦋 На один раз</option>
+                </select>
+                <label for="program-rating">Оценка:</label>
+                <select id="program-rating">
+                    <option value="">Любая</option>
+                    <option value="💀">💀 0</option>
+                    <option value="💩">💩 1</option>
+                    <option value="🍋">🍋 2</option>
+                    <option value="🍅">🍅 3</option>
+                    <option value="🍊">🍊 4</option>
+                    <option value="🍒">🍒 5</option>
+                    <option value="🌽">🌽 6</option>
+                    <option value="🧅">🧅 7</option>
+                </select>
+                <button id="program-search-btn">Поиск</button>
+            </div>
+            <div class="content-list" id="program-content-list"></div>
+        </div>
+        <div id="recipes" class="section" style="display: none;">
+            <h2>Рецепты</h2>
+            <div class="search-menu">
+                <label for="recipe-status">Статус:</label>
+                <select id="recipe-status">
+                    <option value="">Все</option>
+                    <option value="🌕">🌕 Было приготовлено</option>
+                    <option value="🌗">🌗 В процессе</option>
+                    <option value="🌑">🌑 Не было приготовлено</option>
+                </select>
+                <label for="recipe-title">Название:</label>
+                <input type="text" id="recipe-title" placeholder="Введите название">
+                <label for="recipe-genre">Жанр:</label>
+                <input type="text" id="recipe-genre" placeholder="Например, Итальянская кухня">
+                <label for="recipe-year">Год:</label>
+                <input type="number" id="recipe-year" placeholder="Например, 2023" min="1900" max="2100">
+                <label for="recipe-country">Страна:</label>
+                <input type="text" id="recipe-country" placeholder="Например, Италия">
+                <label for="recipe-author">Автор:</label>
+                <input type="text" id="recipe-author" placeholder="Например, Джейми Оливер">
+                <label for="recipe-description">Описание:</label>
+                <input type="text" id="recipe-description" placeholder="Краткое описание">
+                <label for="recipe-characteristics">Характеристика:</label>
+                <select id="recipe-characteristics">
+                    <option value="">Любая</option>
+                    <option value="🪔">🪔 Религиозное</option>
+                    <option value="🔮">🔮 Философское</option>
+                    <option value="🧠">🧠 Немного напрячь мозги</option>
+                    <option value="⚰️">⚰️ Больше никогда не смотреть</option>
+                    <option value="☕">☕ На вечер</option>
+                    <option value="🌹">🌹 Романтическое</option>
+                    <option value="🍷">🍷 Про жизнь</option>
+                    <option value="🦋">🦋 На один раз</option>
+                </select>
+                <label for="recipe-rating">Оценка:</label>
+                <select id="recipe-rating">
+                    <option value="">Любая</option>
+                    <option value="💀">💀 0</option>
+                    <option value="💩">💩 1</option>
+                    <option value="🍋">🍋 2</option>
+                    <option value="🍅">🍅 3</option>
+                    <option value="🍊">🍊 4</option>
+                    <option value="🍒">🍒 5</option>
+                    <option value="🌽">🌽 6</option>
+                    <option value="🧅">🧅 7</option>
+                </select>
+                <button id="recipe-search-btn">Поиск</button>
+            </div>
+            <div class="content-list" id="recipe-content-list"></div>
+        </div>
+        <div id="sites" class="section" style="display: none;">
+            <h2>Сайты</h2>
+            <div class="search-menu">
+                <label for="site-status">Статус:</label>
+                <select id="site-status">
+                    <option value="">Все</option>
+                    <option value="🌕">🌕 Используется</option>
+                    <option value="🌗">🌗 В процессе</option>
+                    <option value="🌑">🌑 Не используется</option>
+                </select>
+                <label for="site-title">Название:</label>
+                <input type="text" id="site-title" placeholder="Введите название">
+                <label for="site-genre">Жанр:</label>
+                <input type="text" id="site-genre" placeholder="Например, Соцсеть">
+                <label for="site-year">Год:</label>
+                <input type="number" id="site-year" placeholder="Например, 2023" min="1900" max="2100">
+                <label for="site-country">Страна:</label>
+                <input type="text" id="site-country" placeholder="Например, США">
+                <label for="site-author">Разработчик:</label>
+                <input type="text" id="site-author" placeholder="Например, Google">
+                <label for="site-description">Описание:</label>
+                <input type="text" id="site-description" placeholder="Краткое описание">
+                <label for="site-characteristics">Характеристика:</label>
+                <select id="site-characteristics">
+                    <option value="">Любая</option>
+                    <option value="🪔">🪔 Религиозное</option>
+                    <option value="🔮">🔮 Философское</option>
+                    <option value="🧠">🧠 Немного напрячь мозги</option>
+                    <option value="⚰️">⚰️ Больше никогда не смотреть</option>
+                    <option value="☕">☕ На вечер</option>
+                    <option value="🌹">🌹 Романтическое</option>
+                    <option value="🍷">🍷 Про жизнь</option>
+                    <option value="🦋">🦋 На один раз</option>
+                </select>
+                <label for="site-rating">Оценка:</label>
+                <select id="site-rating">
+                    <option value="">Любая</option>
+                    <option value="💀">💀 0</option>
+                    <option value="💩">💩 1</option>
+                    <option value="🍋">🍋 2</option>
+                    <option value="🍅">🍅 3</option>
+                    <option value="🍊">🍊 4</option>
+                    <option value="🍒">🍒 5</option>
+                    <option value="🌽">🌽 6</option>
+                    <option value="🧅">🧅 7</option>
+                </select>
+                <button id="site-search-btn">Поиск</button>
+            </div>
+            <div class="content-list" id="site-content-list"></div>
+        </div>
+        <div id="settings" class="section" style="display: none;">
+            <h2>Настройки</h2>
+            <p>Версия 0.1beta</p>
+            <h3>Добавить новый ресурс</h3>
+            <form id="add-resource-form">
+                <label for="resource-type">Тип:</label>
+                <select id="resource-type" required>
+                    <option value="films">Фильмы</option>
+                    <option value="cartoons">Мультфильмы</option>
+                    <option value="series">Сериалы</option>
+                    <option value="cartoon-series">Мультсериалы</option>
+                    <option value="books">Книги</option>
+                    <option value="music">Музыка</option>
+                    <option value="games">Игры</option>
+                    <option value="programs">Программы</option>
+                    <option value="recipes">Рецепты</option>
+                    <option value="sites">Сайты</option>
+                </select>
+                <label for="resource-title">Название:</label>
+                <input type="text" id="resource-title" required>
+                <label for="resource-genre">Жанр:</label>
+                <input type="text" id="resource-genre" placeholder="Например, Драма">
+                <label for="resource-year">Год:</label>
+                <input type="number" id="resource-year" placeholder="Например, 2023" min="1900" max="2100">
+                <label for="resource-country">Страна:</label>
+                <input type="text" id="resource-country" placeholder="Например, США">
+                <label for="resource-author">Автор/Разработчик:</label>
+                <input type="text" id="resource-author" placeholder="Например, Дж. Р. Р. Толкин">
+                <label for="resource-description">Описание:</label>
+                <textarea id="resource-description" placeholder="Краткое описание"></textarea>
+                <label for="resource-image">Изображение:</label>
+                <input type="file" id="resource-image" accept=".jpg,.jpeg,.png,.gif,.webp">
+                <label for="resource-status">Статус:</label>
+                <select id="resource-status" required>
+                    <option value="🌕">🌕 Завершено</option>
+                    <option value="🌗">🌗 В процессе</option>
+                    <option value="🌑">🌑 Не начато</option>
+                </select>
+                <label for="resource-characteristics">Характеристика:</label>
+                <select id="resource-characteristics">
+                    <option value="">Нет</option>
+                    <option value="🪔">🪔 Религиозное</option>
+                    <option value="🔮">🔮 Философское</option>
+                    <option value="🧠">🧠 Немного напрячь мозги</option>
+                    <option value="⚰️">⚰️ Больше никогда не смотреть</option>
+                    <option value="☕">☕ На вечер</option>
+                    <option value="🌹">🌹 Романтическое</option>
+                    <option value="🍷">🍷 Про жизнь</option>
+                    <option value="🦋">🦋 На один раз</option>
+                </select>
+                <label for="resource-rating">Оценка:</label>
+                <select id="resource-rating" required>
+                    <option value="💀">💀 0</option>
+                    <option value="💩">💩 1</option>
+                    <option value="🍋">🍋 2</option>
+                    <option value="🍅">🍅 3</option>
+                    <option value="🍊">🍊 4</option>
+                    <option value="🍒">🍒 5</option>
+                    <option value="🌽">🌽 6</option>
+                    <option value="🧅">🧅 7</option>
+                </select>
+                <button type="submit">Добавить</button>
+            </form>
+        </div>
+    </main>
+
+    <div id="edit-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span id="close-modal" class="close">×</span>
+            <h3>Редактировать ресурс</h3>
+            <form id="edit-resource-form">
+                <input type="hidden" id="edit-id">
+                <input type="hidden" id="edit-type">
+                <label for="edit-title">Название:</label>
+                <input type="text" id="edit-title" required>
+                <label for="edit-genre">Жанр:</label>
+                <input type="text" id="edit-genre" placeholder="Например, Драма">
+                <label for="edit-year">Год:</label>
+                <input type="number" id="edit-year" placeholder="Например, 2023" min="1900" max="2100">
+                <label for="edit-country">Страна:</label>
+                <input type="text" id="edit-country" placeholder="Например, США">
+                <label for="edit-author">Автор/Разработчик:</label>
+                <input type="text" id="edit-author" placeholder="Например, Дж. Р. Р. Толкин">
+                <label for="edit-description">Описание:</label>
+                <textarea id="edit-description" placeholder="Краткое описание"></textarea>
+                <label for="edit-image">Изображение:</label>
+                <input type="file" id="edit-image" accept=".jpg,.jpeg,.png,.gif,.webp">
+                <label for="edit-status">Статус:</label>
+                <select id="edit-status" required>
+                    <option value="🌕">🌕 Завершено</option>
+                    <option value="🌗">🌗 В процессе</option>
+                    <option value="🌑">🌑 Не начато</option>
+                </select>
+                <label for="edit-characteristics">Характеристика:</label>
+                <select id="edit-characteristics">
+                    <option value="">Нет</option>
+                    <option value="🪔">🪔 Религиозное</option>
+                    <option value="🔮">🔮 Философское</option>
+                    <option value="🧠">🧠 Немного напрячь мозги</option>
+                    <option value="⚰️">⚰️ Больше никогда не смотреть</option>
+                    <option value="☕">☕ На вечер</option>
+                    <option value="🌹">🌹 Романтическое</option>
+                    <option value="🍷">🍷 Про жизнь</option>
+                    <option value="🦋">🦋 На один раз</option>
+                </select>
+                <label for="edit-rating">Оценка:</label>
+                <select id="edit-rating" required>
+                    <option value="💀">💀 0</option>
+                    <option value="💩">💩 1</option>
+                    <option value="🍋">🍋 2</option>
+                    <option value="🍅">🍅 3</option>
+                    <option value="🍊">🍊 4</option>
+                    <option value="🍒">🍒 5</option>
+                    <option value="🌽">🌽 6</option>
+                    <option value="🧅">🧅 7</option>
+                </select>
+                <button type="submit">Сохранить</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
