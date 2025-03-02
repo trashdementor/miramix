@@ -156,6 +156,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const statusEl = document.getElementById(`${prefix}-status`);
         const titleEl = document.getElementById(`${prefix}-title`);
+        const genreEl = document.getElementById(`${prefix}-genre`);
+        const yearEl = document.getElementById(`${prefix}-year`);
+        const countryEl = document.getElementById(`${prefix}-country`);
+        const authorEl = document.getElementById(`${prefix}-author`);
+        const descriptionEl = document.getElementById(`${prefix}-description`);
         const charEl = document.getElementById(`${prefix}-characteristics`);
         const ratingEl = document.getElementById(`${prefix}-rating`);
         const searchBtn = document.getElementById(`${prefix}-search-btn`);
@@ -163,12 +168,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!statusEl) console.error(`${prefix}-status не найден`);
         if (!titleEl) console.error(`${prefix}-title не найден`);
+        if (!genreEl) console.error(`${prefix}-genre не найден`);
+        if (!yearEl) console.error(`${prefix}-year не найден`);
+        if (!countryEl) console.error(`${prefix}-country не найден`);
+        if (!authorEl) console.error(`${prefix}-author не найден`);
+        if (!descriptionEl) console.error(`${prefix}-description не найден`);
         if (!charEl) console.error(`${prefix}-characteristics не найден`);
         if (!ratingEl) console.error(`${prefix}-rating не найден`);
         if (!searchBtn) console.error(`${prefix}-search-btn не найден`);
         if (!contentList) console.error(`${prefix}-content-list не найден`);
 
-        if (!statusEl || !titleEl || !charEl || !ratingEl || !searchBtn || !contentList) {
+        if (!statusEl || !titleEl || !genreEl || !yearEl || !countryEl || !authorEl || !descriptionEl || !charEl || !ratingEl || !searchBtn || !contentList) {
             console.error(`Один из элементов для ${type} не найден`);
             return;
         }
@@ -177,6 +187,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!db) return;
             const status = statusEl.value;
             const title = titleEl.value.toLowerCase();
+            const genre = genreEl.value.toLowerCase();
+            const year = yearEl.value;
+            const country = countryEl.value.toLowerCase();
+            const author = authorEl.value.toLowerCase();
+            const description = descriptionEl.value.toLowerCase();
             const characteristics = charEl.value ? [charEl.value] : [];
             const rating = ratingEl.value;
 
@@ -190,6 +205,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (status) results = results.filter(item => item.status === status);
                 if (title) results = results.filter(item => item.title.toLowerCase().includes(title));
+                if (genre) results = results.filter(item => item.genre && item.genre.toLowerCase().includes(genre));
+                if (year) results = results.filter(item => item.year && item.year.toString() === year);
+                if (country) results = results.filter(item => item.country && item.country.toLowerCase().includes(country));
+                if (author) results = results.filter(item => item.author && item.author.toLowerCase().includes(author));
+                if (description) results = results.filter(item => item.description && item.description.toLowerCase().includes(description));
                 if (characteristics.length > 0) {
                     results = results.filter(item => characteristics.every(char => item.characteristics.includes(char)));
                 }
@@ -259,13 +279,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const modal = document.getElementById('edit-modal');
             modal.style.display = 'block';
-            document.body.classList.add('modal-open'); // Блокируем прокрутку фона
+            document.body.classList.add('modal-open');
         };
     };
 
     document.getElementById('close-modal').addEventListener('click', function() {
         document.getElementById('edit-modal').style.display = 'none';
-        document.body.classList.remove('modal-open'); // Разблокируем прокрутку фона
+        document.body.classList.remove('modal-open');
     });
 
     document.getElementById('edit-resource-form').addEventListener('submit', async function(e) {
@@ -338,7 +358,7 @@ document.addEventListener('DOMContentLoaded', function() {
             requestUpdate.onsuccess = function() {
                 alert('Ресурс обновлён');
                 document.getElementById('edit-modal').style.display = 'none';
-                document.body.classList.remove('modal-open'); // Разблокируем прокрутку фона
+                document.body.classList.remove('modal-open');
                 loadTopContent();
                 setupSearch(type);
             };
