@@ -1,1 +1,1 @@
-https://trashdementor.github.io/otherbio/index.html
+https://trashdementor.github.io/otherbio/
