@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
     let db;
-    const request = indexedDB.open('MiraMIXDB', 2);
+    const request = indexedDB.open('MiraMIXDB', 3); // Увеличиваю версию для новых полей
 
     request.onerror = function(event) {
         console.error('Ошибка IndexedDB:', event.target.errorCode);
@@ -14,15 +14,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     request.onupgradeneeded = function(event) {
         db = event.target.result;
-        if (!db.objectStoreNames.contains('content')) {
-            const objectStore = db.createObjectStore('content', { keyPath: 'id', autoIncrement: true });
-            objectStore.createIndex('type', 'type', { unique: false });
-            objectStore.createIndex('status', 'status', { unique: false });
-            objectStore.createIndex('title', 'title', { unique: false });
-            objectStore.createIndex('characteristics', 'characteristics', { unique: false });
-            objectStore.createIndex('rating', 'rating', { unique: false });
-            objectStore.createIndex('image', 'image', { unique: false });
-        }
+        const objectStore = db.createObjectStore('content', { keyPath: 'id', autoIncrement: true });
+        objectStore.createIndex('type', 'type', { unique: false });
+        objectStore.createIndex('status', 'status', { unique: false });
+        objectStore.createIndex('title', 'title', { unique: false });
+        objectStore.createIndex('characteristics', 'characteristics', { unique: false });
+        objectStore.createIndex('rating', 'rating', { unique: false });
+        objectStore.createIndex('image', 'image', { unique: false });
+        objectStore.createIndex('genre', 'genre', { unique: false });
+        objectStore.createIndex('year', 'year', { unique: false });
+        objectStore.createIndex('country', 'country', { unique: false });
+        objectStore.createIndex('author', 'author', { unique: false });
+        objectStore.createIndex('description', 'description', { unique: false });
     };
 
     // Навигация
@@ -52,6 +55,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const type = document.getElementById('resource-type').value;
         const title = document.getElementById('resource-title').value;
+        const genre = document.getElementById('resource-genre').value;
+        const year = document.getElementById('resource-year').value;
+        const country = document.getElementById('resource-country').value;
+        const author = document.getElementById('resource-author').value;
+        const description = document.getElementById('resource-description').value;
         const fileInput = document.getElementById('resource-image');
         const status = document.getElementById('resource-status').value;
         const characteristics = document.getElementById('resource-characteristics').value || '';
@@ -73,12 +81,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('Изображение загружено');
                 } else {
                     console.error('Ошибка ImgBB:', data);
-                    alert('Ошибка загрузки изображения');
+                    alert('Ошибка загрузки изображения: ' + (data.error?.message || 'Неизвестная ошибка'));
                     return;
                 }
             } catch (error) {
-                console.error('Ошибка при загрузке:', error);
-                alert('Ошибка загрузки изображения');
+                console.error('Ошибка при загрузке:', error.message);
+                alert('Ошибка загрузки изображения: ' + error.message);
                 return;
             }
         }
@@ -88,6 +96,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const newItem = {
             type: type,
             title: title,
+            genre: genre,
+            year: year,
+            country: country,
+            author: author,
+            description: description,
             status: status,
             characteristics: characteristics ? [characteristics] : [],
             rating: rating,
@@ -172,7 +185,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     results.forEach(item => {
                         const div = document.createElement('div');
                         const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;">` : 'Нет изображения';
+                        const genreText = item.genre ? `Жанр: ${item.genre}` : '';
+                        const yearText = item.year ? `Год: ${item.year}` : '';
+                        const countryText = item.country ? `Страна: ${item.country}` : '';
+                        const authorText = item.author ? `${type === 'books' || type === 'music' ? 'Автор' : 'Разработчик'}: ${item.author}` : '';
+                        const descText = item.description ? `Описание: ${item.description}` : '';
                         div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} - Характеристика: ${item.characteristics.join(', ') || 'Нет'} 
+                            ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''} 
                             <button onclick="deleteItem(${item.id}, '${type}')">Удалить</button>
                             <button onclick="editItem(${item.id}, '${type}')">Изменить</button>`;
                         contentList.appendChild(div);
@@ -213,6 +232,11 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit-id').value = item.id;
             document.getElementById('edit-type').value = item.type;
             document.getElementById('edit-title').value = item.title;
+            document.getElementById('edit-genre').value = item.genre || '';
+            document.getElementById('edit-year').value = item.year || '';
+            document.getElementById('edit-country').value = item.country || '';
+            document.getElementById('edit-author').value = item.author || '';
+            document.getElementById('edit-description').value = item.description || '';
             document.getElementById('edit-status').value = item.status;
             document.getElementById('edit-characteristics').value = item.characteristics[0] || '';
             document.getElementById('edit-rating').value = item.rating;
@@ -236,6 +260,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const id = parseInt(document.getElementById('edit-id').value);
         const type = document.getElementById('edit-type').value;
         const title = document.getElementById('edit-title').value;
+        const genre = document.getElementById('edit-genre').value;
+        const year = document.getElementById('edit-year').value;
+        const country = document.getElementById('edit-country').value;
+        const author = document.getElementById('edit-author').value;
+        const description = document.getElementById('edit-description').value;
         const fileInput = document.getElementById('edit-image');
         const status = document.getElementById('edit-status').value;
         const characteristics = document.getElementById('edit-characteristics').value || '';
@@ -261,8 +290,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
             } catch (error) {
-                console.error('Ошибка при загрузке:', error);
-                alert('Ошибка загрузки изображения');
+                console.error('Ошибка при загрузке:', error.message);
+                alert('Ошибка загрузки изображения: ' + error.message);
                 return;
             }
         }
@@ -279,10 +308,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 id: id,
                 type: type,
                 title: title,
+                genre: genre,
+                year: year,
+                country: country,
+                author: author,
+                description: description,
                 status: status,
                 characteristics: characteristics ? [characteristics] : [],
                 rating: rating,
-                image: imageUrl || item.image // Сохраняем старое изображение, если новое не загружено
+                image: imageUrl || item.image
             };
 
             const requestUpdate = objectStore.put(updatedItem);
@@ -335,7 +369,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     topItems.forEach(item => {
                         const div = document.createElement('div');
                         const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;">` : 'Нет изображения';
-                        div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} - Характеристика: ${item.characteristics.join(', ') || 'Нет'}`;
+                        const genreText = item.genre ? `Жанр: ${item.genre}` : '';
+                        const yearText = item.year ? `Год: ${item.year}` : '';
+                        const countryText = item.country ? `Страна: ${item.country}` : '';
+                        const authorText = item.author ? `${type === 'books' || type === 'music' ? 'Автор' : 'Разработчик'}: ${item.author}` : '';
+                        const descText = item.description ? `Описание: ${item.description}` : '';
+                        div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} - Характеристика: ${item.characteristics.join(', ') || 'Нет'} 
+                            ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''}`;
                         list.appendChild(div);
                     });
                 }
