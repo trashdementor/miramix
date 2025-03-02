@@ -159,9 +159,10 @@ form button {
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* Изменяем выравнивание для прокрутки */
     z-index: 1000;
-    overflow-y: auto; /* Добавляем прокрутку для всего модального окна */
+    padding: 10px; /* Добавляем отступы */
+    overflow-y: hidden; /* Убираем прокрутку фона */
 }
 
 .modal-content {
@@ -170,9 +171,14 @@ form button {
     border-radius: 8px;
     width: 400px;
     max-width: 90%;
-    max-height: 80vh; /* Ограничиваем максимальную высоту */
-    overflow-y: auto; /* Добавляем прокрутку внутри окна */
-    box-sizing: border-box; /* Учитываем padding в размерах */
+    max-height: 80vh; /* Ограничиваем высоту */
+    overflow-y: auto; /* Прокрутка внутри окна */
+    box-sizing: border-box;
+}
+
+/* Блокируем прокрутку body при открытом модальном окне */
+body.modal-open {
+    overflow: hidden;
 }
 
 .close {
@@ -253,7 +259,7 @@ form button {
     .modal-content {
         width: 90%;
         padding: 15px;
-        max-height: 70vh; /* Уменьшаем высоту для мобильных */
+        max-height: 70vh;
     }
 }
 
@@ -273,6 +279,6 @@ form button {
     }
 
     .modal-content {
-        max-height: 60vh; /* Ещё меньше для маленьких экранов */
+        max-height: 60vh;
     }
 }
