@@ -208,11 +208,11 @@ body.modal-open {
 .content-list.horizontal {
     display: flex;
     flex-direction: row-reverse; /* Справа налево */
-    overflow-x: hidden;
+    overflow-x: hidden; /* Скрываем лишнее */
     gap: 10px;
-    width: 100%;
-    max-width: 600px; /* Ограничение ширины для читаемости */
+    width: 100%; /* Полная ширина контейнера */
     padding: 0;
+    transition: transform 0.3s ease; /* Плавный переход для свайпа */
 }
 
 .content-list.horizontal div {
@@ -313,10 +313,6 @@ body.modal-open {
         width: 90%;
         padding: 15px;
         max-height: 70vh;
-    }
-
-    .content-list.horizontal {
-        max-width: 100%;
     }
 
     .content-list.horizontal div {
