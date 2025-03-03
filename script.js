@@ -2,6 +2,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let db;
     const request = indexedDB.open('MiraMIXDB', 3);
 
+    // Google Drive API настройки
+    const CLIENT_ID = '1034225556818-t3jpsd4gjnda1mu33eerch80pgosh1h2.apps.googleusercontent.com';
+    const API_KEY = 'AIzaSyDuOdMgTHw1pN8qc0RhIYvawFvrKv20UTM';
+    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+    let tokenClient;
+
     request.onerror = function(event) {
         console.error('Ошибка IndexedDB:', event.target.errorCode);
     };
@@ -11,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('База данных готова');
         loadTopContent();
         setupNavigation();
+        initGoogleDrive();
     };
 
     request.onupgradeneeded = function(event) {
@@ -30,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (!objectStore.indexNames.contains('genre')) {
-            objectStore.createIndex('genre', 'genre', { unique: false });
+            objectStore.createIndex('genre ambulances', 'genre', { unique: false });
         }
         if (!objectStore.indexNames.contains('year')) {
             objectStore.createIndex('year', 'year', { unique: false });
@@ -45,6 +52,39 @@ document.addEventListener('DOMContentLoaded', function() {
             objectStore.createIndex('description', 'description', { unique: false });
         }
     };
+
+    // Инициализация Google Drive API
+    function initGoogleDrive() {
+        gapi.load('client', async () => {
+            try {
+                await gapi.client.init({
+                    apiKey: API_KEY,
+                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                });
+                console.log('Google Drive API инициализирован');
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CLIENT_ID,
+                    scope: SCOPES,
+                    callback: (tokenResponse) => {
+                        if (tokenResponse && tokenResponse.access_token) {
+                            gapi.client.setToken(tokenResponse);
+                            document.getElementById('auth-google-btn').style.display = 'none';
+                            document.getElementById('save-to-drive-btn').style.display = 'inline';
+                            document.getElementById('load-from-drive-btn').style.display = 'inline';
+                            console.log('Авторизация успешна');
+                        }
+                    },
+                });
+                document.getElementById('auth-google-btn').addEventListener('click', handleAuthClick);
+            } catch (error) {
+                console.error('Ошибка инициализации Google API:', error);
+            }
+        });
+    }
+
+    function handleAuthClick() {
+        tokenClient.requestAccessToken();
+    }
 
     // Навигация
     const sections = document.querySelectorAll('.section');
@@ -358,7 +398,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
-    // Экспорт данных
+    // Экспорт данных локально
     document.getElementById('export-btn').addEventListener('click', function() {
         if (!db) {
             alert('База данных ещё не готова.');
@@ -385,7 +425,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
-    // Импорт данных
+    // Импорт данных локально
     document.getElementById('import-btn').addEventListener('click', function() {
         document.getElementById('import-file').click();
     });
@@ -432,6 +472,98 @@ document.addEventListener('DOMContentLoaded', function() {
         reader.readAsText(file);
     });
 
+    // Сохранение в Google Drive
+    document.getElementById('save-to-drive-btn').addEventListener('click', function() {
+        if (!db) {
+            alert('База данных ещё не готова.');
+            return;
+        }
+
+        const transaction = db.transaction(['content'], 'readonly');
+        const objectStore = transaction.objectStore('content');
+        const request = objectStore.getAll();
+
+        request.onsuccess = function(event) {
+            const data = event.target.result;
+            const json = JSON.stringify(data, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const metadata = {
+                name: 'miramix_data.json',
+                mimeType: 'application/json',
+            };
+
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', blob);
+
+            gapi.client.request({
+                path: '/upload/drive/v3/files',
+                method: 'POST',
+                params: { uploadType: 'multipart' },
+                body: form
+            }).then(response => {
+                alert('Данные успешно сохранены в Google Drive');
+                console.log('Файл сохранён в Drive:', response.result);
+            }).catch(error => {
+                console.error('Ошибка сохранения в Google Drive:', error);
+                alert('Ошибка сохранения в Google Drive');
+            });
+        };
+    });
+
+    // Загрузка из Google Drive
+    document.getElementById('load-from-drive-btn').addEventListener('click', function() {
+        gapi.client.drive.files.list({
+            q: "name='miramix_data.json'",
+            fields: 'files(id, name)'
+        }).then(response => {
+            const files = response.result.files;
+            if (files && files.length > 0) {
+                const fileId = files[0].id;
+                gapi.client.drive.files.get({
+                    fileId: fileId,
+                    alt: 'media'
+                }).then(response => {
+                    const data = JSON.parse(response.body);
+                    if (!Array.isArray(data)) {
+                        alert('Неверный формат файла из Google Drive');
+                        return;
+                    }
+
+                    const transaction = db.transaction(['content'], 'readwrite');
+                    const objectStore = transaction.objectStore('content');
+
+                    objectStore.clear().onsuccess = function() {
+                        data.forEach(item => {
+                            objectStore.add(item);
+                        });
+
+                        transaction.oncomplete = function() {
+                            alert('Данные успешно загружены из Google Drive');
+                            loadTopContent();
+                            const currentSection = document.querySelector('.section:not([style*="display: none"])').id;
+                            if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(currentSection)) {
+                                setupSearch(currentSection);
+                            }
+                        };
+                        transaction.onerror = function(event) {
+                            console.error('Ошибка при импорте из Drive:', event.target.error);
+                            alert('Ошибка при импорте данных из Google Drive');
+                        };
+                    };
+                }).catch(error => {
+                    console.error('Ошибка загрузки файла из Drive:', error);
+                    alert('Ошибка загрузки файла из Google Drive');
+                });
+            } else {
+                alert('Файл miramix_data.json не найден в Google Drive');
+            }
+        }).catch(error => {
+            console.error('Ошибка поиска файла в Drive:', error);
+            alert('Ошибка поиска файла в Google Drive');
+        });
+    });
+
     // Топ контент с горизонтальной прокруткой
     function loadTopContent() {
         if (!db) {
@@ -461,7 +593,6 @@ document.addEventListener('DOMContentLoaded', function() {
             request.onsuccess = function(event) {
                 const items = event.target.result || [];
                 console.log(`Тип: ${type}, Загружено элементов: ${items.length}`);
-                console.log('Элементы до фильтрации:', items);
                 renderTopList(listId, items, limit);
             };
             request.onerror = function(event) {
@@ -477,35 +608,24 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Фильтрация: только "Просмотрено" (🌕) и "В процессе" (🌗)
         const allowedStatuses = ['🌕', '🌗'];
-        let filteredItems = items.filter(item => {
-            const statusMatch = allowedStatuses.includes(item.status);
-            return statusMatch;
-        });
+        let filteredItems = items.filter(item => allowedStatuses.includes(item.status));
 
-        // Фильтрация: рейтинг от 4 до 7
         const ratings = { '💀': 0, '💩': 1, '🍋': 2, '🍅': 3, '🍊': 4, '🍒': 5, '🌽': 6, '🧅': 7 };
         filteredItems = filteredItems.filter(item => {
             const ratingValue = ratings[item.rating];
-            const ratingMatch = ratingValue >= 4 && ratingValue <= 7;
-            return ratingMatch;
+            return ratingValue >= 4 && ratingValue <= 7;
         });
 
-        console.log(`После фильтрации для ${listId}: ${filteredItems.length} элементов`, filteredItems);
-
-        // Сортировка по рейтингу (убывание)
         filteredItems.sort((a, b) => {
             const ratingsOrder = { '🧅': 7, '🌽': 6, '🍒': 5, '🍊': 4, '🍅': 3, '🍋': 2, '💩': 1, '💀': 0 };
             return ratingsOrder[b.rating] - ratingsOrder[a.rating];
         });
 
-        // Ограничение по лимиту
         const topItems = filteredItems.slice(0, limit);
 
         list.innerHTML = '';
         if (topItems.length === 0) {
-            console.log(`Нет элементов для отображения в ${listId}`);
             list.innerHTML = '<p>Нет элементов, соответствующих критериям</p>';
         } else {
             topItems.forEach((item, index) => {
@@ -519,12 +639,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} - Характеристика: ${item.characteristics.join(', ') || 'Нет'} 
                     ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''}`;
                 list.appendChild(div);
-                // Добавляем задержку для последовательного появления
                 setTimeout(() => {
-                    div.style.animationDelay = `${index * 0.1}s`; // Задержка 0.1с для каждого следующего элемента
+                    div.style.animationDelay = `${index * 0.1}s`;
                 }, 0);
             });
-            console.log(`Отрисовано ${topItems.length} элементов в ${listId}`);
         }
 
         updateScrollIndicator(list);
@@ -534,7 +652,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const topLists = document.querySelectorAll('.content-list.horizontal');
         const prevButtons = document.querySelectorAll('.prev-btn');
         const nextButtons = document.querySelectorAll('.next-btn');
-        const scrollStep = 200; // Шаг прокрутки в пикселях
+        const scrollStep = 200;
 
         topLists.forEach(list => {
             let startX = 0;
@@ -553,7 +671,7 @@ document.addEventListener('DOMContentLoaded', function() {
             list.addEventListener('touchmove', drag);
             list.addEventListener('touchend', stopDragging);
 
-            list.addEventListener('scroll', () => updateScrollIndicator(list)); // Обновление индикатора при прокрутке
+            list.addEventListener('scroll', () => updateScrollIndicator(list));
 
             function startDragging(e) {
                 isDragging = true;
@@ -574,7 +692,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const timeNow = Date.now();
                 const timeDelta = timeNow - lastTime;
                 if (timeDelta > 0) {
-                    velocity = (x - lastX) / timeDelta; // Скорость в px/мс
+                    velocity = (x - lastX) / timeDelta;
                     lastX = x;
                     lastTime = timeNow;
                 }
@@ -585,7 +703,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 isDragging = false;
 
                 if (e.type === 'touchend' && Math.abs(velocity) > 0.5) {
-                    const momentum = velocity * 200; // Уменьшенное усиление инерции
+                    const momentum = velocity * 200;
                     const newScrollLeft = list.scrollLeft - momentum;
                     list.scrollTo({
                         left: Math.max(0, Math.min(newScrollLeft, list.scrollWidth - list.clientWidth)),
@@ -595,7 +713,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Стрелки для ПК
         prevButtons.forEach(btn => {
             btn.addEventListener('click', function() {
                 const list = this.nextElementSibling;
@@ -611,7 +728,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Обновление индикатора прокрутки
     function updateScrollIndicator(list) {
         const type = list.id.replace('top-', '').replace('-list', '');
         const indicatorBar = document.querySelector(`.scroll-indicator-bar[data-type="${type}"]`);
