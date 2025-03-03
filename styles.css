@@ -208,11 +208,11 @@ body.modal-open {
 .content-list.horizontal {
     display: flex;
     flex-direction: row-reverse; /* Справа налево */
-    overflow-x: hidden; /* Скрываем лишнее */
+    overflow-x: auto; /* Прокрутка при необходимости */
     gap: 10px;
-    width: 100%; /* Полная ширина контейнера */
+    width: 100%;
     padding: 0;
-    transition: transform 0.3s ease; /* Плавный переход для свайпа */
+    /* scroll-behavior удалён для мгновенного свайпа */
 }
 
 .content-list.horizontal div {
@@ -322,6 +322,10 @@ body.modal-open {
     .content-list.horizontal img {
         width: 80px;
         height: 120px;
+    }
+
+    .prev-btn, .next-btn {
+        padding: 3px 8px; /* Уменьшаем кнопки на мобильных */
     }
 }
 
