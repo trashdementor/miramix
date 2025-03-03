@@ -515,29 +515,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 mimeType: 'application/json'
             };
 
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', blob);
+
             try {
-                const createResponse = await gapi.client.drive.files.create({
-                    resource: metadata,
-                    fields: 'id'
+                const response = await gapi.client.request({
+                    path: '/upload/drive/v3/files',
+                    method: 'POST',
+                    params: { uploadType: 'multipart' },
+                    body: form
                 });
-                const fileId = createResponse.result.id;
-                console.log('Файл создан с ID:', fileId);
-
-                const uploadResponse = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Authorization': `Bearer ${gapi.auth.getToken().access_token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: blob
-                });
-
-                if (!uploadResponse.ok) {
-                    throw new Error('Ошибка загрузки содержимого: ' + uploadResponse.statusText);
-                }
-
                 alert('Данные успешно сохранены в Google Drive');
-                console.log('Содержимое загружено в файл:', await uploadResponse.json());
+                console.log('Файл сохранён в Drive:', response.result);
             } catch (error) {
                 console.error('Ошибка сохранения в Google Drive:', error);
                 alert('Ошибка сохранения в Google Drive: ' + error.message);
