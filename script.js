@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     results.forEach(item => {
                         const div = document.createElement('div');
-                        const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;">` : 'Нет изображения';
+                        const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;" loading="lazy">` : 'Нет изображения';
                         const genreText = item.genre ? `Жанр: ${item.genre}` : '';
                         const yearText = item.year ? `Год: ${item.year}` : '';
                         const countryText = item.country ? `Страна: ${item.country}` : '';
@@ -474,7 +474,7 @@ document.addEventListener('DOMContentLoaded', function() {
         list.innerHTML = '';
         items.forEach(item => {
             const div = document.createElement('div');
-            const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;">` : 'Нет изображения';
+            const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;" loading="lazy">` : 'Нет изображения';
             const genreText = item.genre ? `Жанр: ${item.genre}` : '';
             const yearText = item.year ? `Год: ${item.year}` : '';
             const countryText = item.country ? `Страна: ${item.country}` : '';
