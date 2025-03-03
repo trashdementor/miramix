@@ -68,7 +68,7 @@ main {
     display: block;
 }
 
-.search-menu, .filter-menu {
+.search-menu {
     margin-bottom: 20px;
     display: flex;
     flex-wrap: wrap;
@@ -76,12 +76,12 @@ main {
     align-items: center;
 }
 
-.search-menu label, .filter-menu label {
+.search-menu label {
     margin-right: 10px;
     color: #66FCF1;
 }
 
-.search-menu select, .search-menu input, .filter-menu select {
+.search-menu select, .search-menu input {
     margin-right: 20px;
     padding: 5px;
     background-color: #C5C6C7;
@@ -89,7 +89,7 @@ main {
     border-radius: 4px;
 }
 
-.search-menu button, .filter-menu button {
+.search-menu button {
     padding: 5px 10px;
     background-color: #66FCF1;
     color: #1A1A1D;
@@ -304,17 +304,17 @@ body.modal-open {
         padding: 10px;
     }
 
-    .search-menu, .filter-menu {
+    .search-menu {
         display: flex;
         flex-direction: column;
         gap: 10px;
     }
 
-    .search-menu label, .filter-menu label {
+    .search-menu label {
         margin-right: 0;
     }
 
-    .search-menu select, .search-menu input, .filter-menu select {
+    .search-menu select, .search-menu input {
         margin-right: 0;
         width: 100%;
     }
