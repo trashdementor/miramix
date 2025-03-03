@@ -508,7 +508,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log(`Нет элементов для отображения в ${listId}`);
             list.innerHTML = '<p>Нет элементов, соответствующих критериям</p>';
         } else {
-            topItems.forEach(item => {
+            topItems.forEach((item, index) => {
                 const div = document.createElement('div');
                 const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;" loading="lazy">` : 'Нет изображения';
                 const genreText = item.genre ? `Жанр: ${item.genre}` : '';
@@ -519,6 +519,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} - Характеристика: ${item.characteristics.join(', ') || 'Нет'} 
                     ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''}`;
                 list.appendChild(div);
+                // Добавляем задержку для последовательного появления
+                setTimeout(() => {
+                    div.style.animationDelay = `${index * 0.1}s`; // Задержка 0.1с для каждого следующего элемента
+                }, 0);
             });
             console.log(`Отрисовано ${topItems.length} элементов в ${listId}`);
         }
