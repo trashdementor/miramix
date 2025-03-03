@@ -484,24 +484,32 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('save-to-drive-btn').addEventListener('click', async function() {
         if (!db) {
             alert('База данных ещё не готова.');
+            console.error('База данных не инициализирована');
             return;
         }
 
+        console.log('Начало сохранения в Google Drive');
         const transaction = db.transaction(['content'], 'readonly');
         const objectStore = transaction.objectStore('content');
         const request = objectStore.getAll();
 
         request.onsuccess = async function(event) {
+            console.log('Запрос на получение данных выполнен');
             const data = event.target.result;
-            console.log('Данные из базы перед сохранением:', data);
-            if (!data || data.length === 0) {
-                alert('Нет данных для сохранения.');
+            console.log('Данные из базы:', data);
+
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                alert('Нет данных для сохранения или данные некорректны.');
+                console.error('Данные отсутствуют или не являются массивом:', data);
                 return;
             }
 
             const json = JSON.stringify(data, null, 2);
             console.log('JSON для сохранения:', json);
+
             const blob = new Blob([json], { type: 'application/json' });
+            console.log('Blob создан, размер:', blob.size);
+
             const metadata = {
                 name: 'miramix_data.json',
                 mimeType: 'application/json'
@@ -525,6 +533,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('Ошибка сохранения в Google Drive: ' + error.message);
             }
         };
+
         request.onerror = function(event) {
             console.error('Ошибка получения данных из базы:', event.target.error);
             alert('Ошибка получения данных из базы');
