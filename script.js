@@ -484,6 +484,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''}`;
             list.appendChild(div);
         });
+
+        updateScrollIndicator(list);
     }
 
     function setupNavigation() {
@@ -508,6 +510,8 @@ document.addEventListener('DOMContentLoaded', function() {
             list.addEventListener('touchstart', startDragging);
             list.addEventListener('touchmove', drag);
             list.addEventListener('touchend', stopDragging);
+
+            list.addEventListener('scroll', () => updateScrollIndicator(list)); // Обновление индикатора при прокрутке
 
             function startDragging(e) {
                 isDragging = true;
@@ -564,5 +568,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 list.scrollBy({ left: scrollStep, behavior: 'smooth' });
             });
         });
+    }
+
+    // Обновление индикатора прокрутки
+    function updateScrollIndicator(list) {
+        const type = list.id.replace('top-', '').replace('-list', '');
+        const indicatorBar = document.querySelector(`.scroll-indicator-bar[data-type="${type}"]`);
+        if (!indicatorBar) return;
+
+        const scrollLeft = list.scrollLeft;
+        const scrollWidth = list.scrollWidth;
+        const clientWidth = list.clientWidth;
+
+        if (scrollWidth <= clientWidth) {
+            indicatorBar.style.width = '100%';
+            indicatorBar.style.left = '0';
+            return;
+        }
+
+        const scrollPercentage = scrollLeft / (scrollWidth - clientWidth);
+        const barWidthPercentage = clientWidth / scrollWidth;
+        const barWidth = barWidthPercentage * 100;
+
+        indicatorBar.style.width = `${barWidth}%`;
+        indicatorBar.style.left = `${scrollPercentage * (100 - barWidth)}%`;
     }
 });
