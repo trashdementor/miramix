@@ -102,6 +102,27 @@ document.addEventListener('DOMContentLoaded', function() {
         tokenClient.requestAccessToken();
     }
 
+    async function getValidAccessToken() {
+        return new Promise((resolve) => {
+            getTokenFromDB((accessToken) => {
+                if (accessToken) {
+                    resolve(accessToken);
+                } else {
+                    tokenClient.callback = (tokenResponse) => {
+                        if (tokenResponse && tokenResponse.access_token) {
+                            saveTokenToDB(tokenResponse.access_token);
+                            resolve(tokenResponse.access_token);
+                        } else {
+                            console.error('Не удалось получить токен:', tokenResponse);
+                            resolve(null);
+                        }
+                    };
+                    tokenClient.requestAccessToken();
+                }
+            });
+        });
+    }
+
     const sections = document.querySelectorAll('.section');
     const links = document.querySelectorAll('nav a');
 
@@ -510,26 +531,48 @@ document.addEventListener('DOMContentLoaded', function() {
             const blob = new Blob([json], { type: 'application/json' });
             console.log('Blob создан, размер:', blob.size);
 
+            const accessToken = await getValidAccessToken();
+            if (!accessToken) {
+                alert('Не удалось получить токен доступа. Попробуйте авторизоваться заново.');
+                console.error('Токен доступа не получен');
+                return;
+            }
+
+            const boundary = 'foo_bar_baz';
+            const delimiter = `\r\n--${boundary}\r\n`;
+            const closeDelim = `\r\n--${boundary}--`;
+
             const metadata = {
                 name: 'miramix_data.json',
                 mimeType: 'application/json'
             };
 
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-            form.append('file', blob);
+            const multipartBody = 
+                delimiter +
+                'Content-Type: application/json\r\n\r\n' +
+                JSON.stringify(metadata) +
+                delimiter +
+                'Content-Type: application/json\r\n\r\n' +
+                json +
+                closeDelim;
 
             try {
-                const response = await gapi.client.request({
-                    path: '/upload/drive/v3/files',
+                const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
                     method: 'POST',
-                    params: { uploadType: 'multipart' },
                     headers: {
-                        'Content-Type': 'multipart/related; boundary=foo_bar_baz'
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': `multipart/related; boundary=${boundary}`
                     },
-                    body: form
+                    body: multipartBody
                 });
-                console.log('Файл успешно сохранён в Drive:', response.result);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Ошибка HTTP ${response.status}: ${errorText}`);
+                }
+
+                const result = await response.json();
+                console.log('Файл успешно сохранён в Drive:', result);
                 alert('Данные успешно сохранены в Google Drive как miramix_data.json');
             } catch (error) {
                 console.error('Ошибка при сохранении в Google Drive:', error);
@@ -543,58 +586,74 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
-    document.getElementById('load-from-drive-btn').addEventListener('click', function() {
-        gapi.client.drive.files.list({
-            q: "name='miramix_data.json'",
-            fields: 'files(id, name, createdTime)',
-            orderBy: 'createdTime desc'
-        }).then(response => {
-            const files = response.result.files;
+    document.getElementById('load-from-drive-btn').addEventListener('click', async function() {
+        const accessToken = await getValidAccessToken();
+        if (!accessToken) {
+            alert('Не удалось получить токен доступа. Попробуйте авторизоваться заново.');
+            console.error('Токен доступа не получен');
+            return;
+        }
+
+        try {
+            const listResponse = await fetch('https://www.googleapis.com/drive/v3/files?q=name%3D%27miramix_data.json%27&fields=files(id,name,createdTime)&orderBy=createdTime%20desc', {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+
+            if (!listResponse.ok) {
+                throw new Error('Ошибка поиска файла: ' + listResponse.statusText);
+            }
+
+            const listData = await listResponse.json();
+            const files = listData.files;
             if (files && files.length > 0) {
                 const fileId = files[0].id;
-                gapi.client.drive.files.get({
-                    fileId: fileId,
-                    alt: 'media'
-                }).then(response => {
-                    const data = JSON.parse(response.body);
-                    if (!Array.isArray(data)) {
-                        alert('Неверный формат файла из Google Drive');
-                        return;
+                const fileResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
                     }
-
-                    const transaction = db.transaction(['content'], 'readwrite');
-                    const objectStore = transaction.objectStore('content');
-
-                    objectStore.clear().onsuccess = function() {
-                        data.forEach(item => {
-                            objectStore.add(item);
-                        });
-
-                        transaction.oncomplete = function() {
-                            alert('Данные успешно загружены из Google Drive');
-                            loadTopContent();
-                            const currentSection = document.querySelector('.section:not([style*="display: none"])').id;
-                            if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(currentSection)) {
-                                setupSearch(currentSection);
-                            }
-                        };
-                        transaction.onerror = function(event) {
-                            console.error('Ошибка при импорте из Drive:', event.target.error);
-                            alert('Ошибка при импорте данных из Google Drive');
-                        };
-                    };
-                }).catch(error => {
-                    console.error('Ошибка загрузки файла из Drive:', error);
-                    alert('Ошибка загрузки файла из Google Drive: ' + error.message);
                 });
+
+                if (!fileResponse.ok) {
+                    throw new Error('Ошибка загрузки файла: ' + fileResponse.statusText);
+                }
+
+                const data = await fileResponse.json();
+                if (!Array.isArray(data)) {
+                    alert('Неверный формат файла из Google Drive');
+                    return;
+                }
+
+                const transaction = db.transaction(['content'], 'readwrite');
+                const objectStore = transaction.objectStore('content');
+
+                objectStore.clear().onsuccess = function() {
+                    data.forEach(item => {
+                        objectStore.add(item);
+                    });
+
+                    transaction.oncomplete = function() {
+                        alert('Данные успешно загружены из Google Drive');
+                        loadTopContent();
+                        const currentSection = document.querySelector('.section:not([style*="display: none"])').id;
+                        if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(currentSection)) {
+                            setupSearch(currentSection);
+                        }
+                    };
+                    transaction.onerror = function(event) {
+                        console.error('Ошибка при импорте из Drive:', event.target.error);
+                        alert('Ошибка при импорте данных из Google Drive');
+                    };
+                };
             } else {
                 alert('Файл miramix_data.json не найден в Google Drive');
-                console.log('Список файлов:', response.result);
+                console.log('Список файлов:', listData);
             }
-        }).catch(error => {
-            console.error('Ошибка поиска файла в Drive:', error);
-            alert('Ошибка поиска файла в Google Drive: ' + error.message);
-        });
+        } catch (error) {
+            console.error('Ошибка загрузки из Drive:', error);
+            alert('Ошибка загрузки из Google Drive: ' + error.message);
+        }
     });
 
     function loadTopContent() {
