@@ -490,8 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const topLists = document.querySelectorAll('.content-list.horizontal');
         const prevButtons = document.querySelectorAll('.prev-btn');
         const nextButtons = document.querySelectorAll('.next-btn');
-        const scrollStep = 200; // Шаг прокрутки в пикселях (ширина одного блока)
-        const isMobile = window.matchMedia("(max-width: 768px)").matches;
+        const scrollStep = 200; // Шаг прокрутки в пикселях
 
         topLists.forEach(list => {
             let startX = 0;
@@ -500,18 +499,15 @@ document.addEventListener('DOMContentLoaded', function() {
             let isDragging = false;
             let velocity = 0;
 
-            if (isMobile) {
-                // Мобильный свайп с инерцией и скоростью
-                list.addEventListener('touchstart', startDragging);
-                list.addEventListener('touchmove', drag);
-                list.addEventListener('touchend', stopDragging);
-            } else {
-                // ПК свайп без инерции
-                list.addEventListener('mousedown', startDragging);
-                list.addEventListener('mousemove', drag);
-                list.addEventListener('mouseup', stopDragging);
-                list.addEventListener('mouseleave', stopDragging);
-            }
+            // Универсальные события для ПК и мобильных
+            list.addEventListener('mousedown', startDragging);
+            list.addEventListener('mousemove', drag);
+            list.addEventListener('mouseup', stopDragging);
+            list.addEventListener('mouseleave', stopDragging);
+
+            list.addEventListener('touchstart', startDragging);
+            list.addEventListener('touchmove', drag);
+            list.addEventListener('touchend', stopDragging);
 
             function startDragging(e) {
                 isDragging = true;
@@ -529,11 +525,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const delta = x - startX;
                 list.scrollLeft = scrollLeft - delta;
 
-                if (isMobile) {
-                    const timeDelta = Date.now() - startTime;
-                    if (timeDelta > 0) {
-                        velocity = delta / timeDelta; // Скорость в пикселях/мс
-                    }
+                const timeDelta = Date.now() - startTime;
+                if (timeDelta > 0) {
+                    velocity = delta / timeDelta; // Скорость в пикселях/мс
                 }
             }
 
@@ -541,8 +535,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!isDragging) return;
                 isDragging = false;
 
-                if (isMobile && Math.abs(velocity) > 0.5) { // Порог скорости для резкого свайпа
-                    const momentum = velocity * 600; // Усиление для прокрутки на несколько позиций
+                // Инерция только для мобильных (тач-события)
+                if (e.type === 'touchend' && Math.abs(velocity) > 0.3) { // Порог скорости для резкого свайпа
+                    const momentum = velocity * 500; // Усиление инерции
                     const newScrollLeft = list.scrollLeft - momentum;
                     list.scrollTo({
                         left: Math.max(0, Math.min(newScrollLeft, list.scrollWidth - list.clientWidth)),
@@ -552,21 +547,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Обработка кликов по кнопкам (только для ПК)
-        if (!isMobile) {
-            prevButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const list = this.nextElementSibling;
-                    list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
-                });
+        // Стрелки только для ПК
+        prevButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const list = this.nextElementSibling;
+                list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
             });
+        });
 
-            nextButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const list = this.previousElementSibling;
-                    list.scrollBy({ left: scrollStep, behavior: 'smooth' });
-                });
+        nextButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const list = this.previousElementSibling;
+                list.scrollBy({ left: scrollStep, behavior: 'smooth' });
             });
-        }
+        });
     }
 });
