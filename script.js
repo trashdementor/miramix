@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const request = indexedDB.open('MiraMIXDB', 3);
 
     // Google Drive API настройки
-    const CLIENT_ID = '1034225556818-t3jpsd4gjnda1mu33eerch80pgosh1h2.apps.googleusercontent.com';
-    const API_KEY = 'AIzaSyDuOdMgTHw1pN8qc0RhIYvawFvrKv20UTM';
+    const CLIENT_ID = '707439660280-hat6arhn868djnimb3bnf418bp2hnjlc.apps.googleusercontent.com';
+    const API_KEY = 'AIzaSyDGczTbyZV_CpeEMRpkzPrDPOxwaCR6vbk';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
     let tokenClient;
 
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (!objectStore.indexNames.contains('genre')) {
-            objectStore.createIndex('genre ambulances', 'genre', { unique: false });
+            objectStore.createIndex('genre', 'genre', { unique: false });
         }
         if (!objectStore.indexNames.contains('year')) {
             objectStore.createIndex('year', 'year', { unique: false });
