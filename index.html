@@ -5,51 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>МираMIX</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <header>
-        <div class="logo">
-            <img src="images/logo.png" alt="Логотип" id="logo">
+        <div class="left-header">
+            <div class="logo">
+                <img src="images/logo.png" alt="Логотип" id="logo">
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li class="dropdown">
+                        <a href="#catalog">Каталог</a>
+                        <div class="dropdown-content">
+                            <a href="#films">Фильмы</a>
+                            <a href="#cartoons">Мультфильмы</a>
+                            <a href="#series">Сериалы</a>
+                            <a href="#cartoon-series">Мультсериалы</a>
+                            <a href="#books">Книги</a>
+                            <a href="#music">Музыка</a>
+                            <a href="#games">Игры</a>
+                            <a href="#programs">Программы</a>
+                            <a href="#recipes">Рецепты</a>
+                            <a href="#sites">Сайты</a>
+                        </div>
+                    </li>
+                    <li class="dropdown">
+                        <a href="#recommendations">Рекомендации</a>
+                        <div class="dropdown-content">
+                            <a href="#rec-films">Фильмы</a>
+                            <a href="#rec-cartoons">Мультфильмы</a>
+                            <a href="#rec-series">Сериалы</a>
+                            <a href="#rec-cartoon-series">Мультсериалы</a>
+                            <a href="#rec-books">Книги</a>
+                            <a href="#rec-music">Музыка</a>
+                            <a href="#rec-games">Игры</a>
+                            <a href="#rec-programs">Программы</a>
+                            <a href="#rec-recipes">Рецепты</a>
+                            <a href="#rec-sites">Сайты</a>
+                        </div>
+                    </li>
+                </ul>
+            </nav>
         </div>
-        <nav>
+        <nav class="settings-nav">
             <ul>
-                <li class="dropdown">
-                    <a href="#catalog">Каталог</a>
-                    <div class="dropdown-content">
-                        <a href="#films">Фильмы</a>
-                        <a href="#cartoons">Мультфильмы</a>
-                        <a href="#series">Сериалы</a>
-                        <a href="#cartoon-series">Мультсериалы</a>
-                        <a href="#books">Книги</a>
-                        <a href="#music">Музыка</a>
-                        <a href="#games">Игры</a>
-                        <a href="#programs">Программы</a>
-                        <a href="#recipes">Рецепты</a>
-                        <a href="#sites">Сайты</a>
-                    </div>
-                </li>
-                <li class="dropdown">
-                    <a href="#recommendations">Рекомендации</a>
-                    <div class="dropdown-content">
-                        <a href="#rec-films">Фильмы</a>
-                        <a href="#rec-cartoons">Мультфильмы</a>
-                        <a href="#rec-series">Сериалы</a>
-                        <a href="#rec-cartoon-series">Мультсериалы</a>
-                        <a href="#rec-books">Книги</a>
-                        <a href="#rec-music">Музыка</a>
-                        <a href="#rec-games">Игры</a>
-                        <a href="#rec-programs">Программы</a>
-                        <a href="#rec-recipes">Рецепты</a>
-                        <a href="#rec-sites">Сайты</a>
-                    </div>
-                </li>
                 <li><a href="#settings"><img src="images/settings.png" alt="Настройки" class="settings-icon"></a></li>
             </ul>
         </nav>
     </header>
     <main>
         <div id="top" class="section">
-            <h2>ТОП</h2>
             <div id="top-films" class="top-section">
                 <h3>Фильмы</h3>
                 <div class="top-container">
@@ -141,8 +148,8 @@
                 <div class="scroll-indicator"><div class="scroll-indicator-bar" data-type="sites"></div></div>
             </div>
         </div>
-        <div id="catalog" class="section" style="display: none;">Каталог</div>
-        <div id="recommendations" class="section" style="display: none;">Рекомендации</div>
+        <div id="catalog" class="section" style="display: none;"></div>
+        <div id="recommendations" class="section" style="display: none;"></div>
         <div id="films" class="section" style="display: none;">
             <h2>Фильмы</h2>
             <div class="search-menu">
@@ -707,9 +714,12 @@
                 <button type="submit">Добавить</button>
             </form>
             <h3>Управление данными</h3>
-            <button id="export-btn">Экспорт данных</button>
+            <button id="export-btn">Экспорт данных локально</button>
             <input type="file" id="import-file" accept=".json" style="display: none;">
-            <button id="import-btn">Импорт данных</button>
+            <button id="import-btn">Импорт данных локально</button>
+            <button id="auth-google-btn">Авторизоваться в Google</button>
+            <button id="save-to-drive-btn" style="display: none;">Сохранить в Google Drive</button>
+            <button id="load-from-drive-btn" style="display: none;">Загрузить из Google Drive</button>
         </div>
     </main>
 
