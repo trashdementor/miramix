@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const API_KEY = 'AIzaSyDGczTbyZV_CpeEMRpkzPrDPOxwaCR6vbk';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
     let tokenClient;
-    let accessToken = localStorage.getItem('googleAccessToken'); // Проверяем сохранённый токен
+    let accessToken = localStorage.getItem('googleAccessToken');
 
     request.onerror = function(event) {
         console.error('Ошибка IndexedDB:', event.target.errorCode);
@@ -527,7 +527,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('load-from-drive-btn').addEventListener('click', function() {
         gapi.client.drive.files.list({
             q: "name='miramix_data.json'",
-            fields: 'files(id, name)'
+            fields: 'files(id, name, createdTime)',
+            orderBy: 'createdTime desc'
         }).then(response => {
             const files = response.result.files;
             if (files && files.length > 0) {
@@ -565,14 +566,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     };
                 }).catch(error => {
                     console.error('Ошибка загрузки файла из Drive:', error);
-                    alert('Ошибка загрузки файла из Google Drive');
+                    alert('Ошибка загрузки файла из Google Drive: ' + error.message);
                 });
             } else {
                 alert('Файл miramix_data.json не найден в Google Drive');
+                console.log('Список файлов:', response.result);
             }
         }).catch(error => {
             console.error('Ошибка поиска файла в Drive:', error);
-            alert('Ошибка поиска файла в Google Drive');
+            alert('Ошибка поиска файла в Google Drive: ' + error.message);
         });
     });
 
