@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('База данных готова');
         loadTopContent();
         setupNavigation();
+        setupTopFilters();
     };
 
     request.onupgradeneeded = function(event) {
@@ -457,22 +458,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
             request.onsuccess = function(event) {
                 let items = event.target.result;
-                items.sort((a, b) => {
-                    const ratings = { '🧅': 7, '🌽': 6, '🍒': 5, '🍊': 4, '🍅': 3, '🍋': 2, '💩': 1, '💀': 0 };
-                    return ratings[b.rating] - ratings[a.rating];
-                });
-                const topItems = items.slice(0, limit);
-                renderTopList(listId, topItems);
+                renderTopList(listId, items, type, limit);
             };
         });
     }
 
-    function renderTopList(listId, items) {
+    function renderTopList(listId, items, type, limit) {
         const list = document.getElementById(listId);
         if (!list) return;
 
+        const statusFilter = document.getElementById(`top-${type}-status`).value;
+        const minRatingFilter = document.getElementById(`top-${type}-min-rating`).value;
+
+        let filteredItems = items;
+
+        // Фильтрация по статусу
+        if (statusFilter) {
+            filteredItems = filteredItems.filter(item => item.status === statusFilter);
+        }
+
+        // Фильтрация по минимальному рейтингу
+        if (minRatingFilter) {
+            const ratings = { '💀': 0, '💩': 1, '🍋': 2, '🍅': 3, '🍊': 4, '🍒': 5, '🌽': 6, '🧅': 7 };
+            const minRatingValue = parseInt(minRatingFilter);
+            filteredItems = filteredItems.filter(item => ratings[item.rating] >= minRatingValue);
+        }
+
+        // Сортировка по рейтингу
+        filteredItems.sort((a, b) => {
+            const ratings = { '🧅': 7, '🌽': 6, '🍒': 5, '🍊': 4, '🍅': 3, '🍋': 2, '💩': 1, '💀': 0 };
+            return ratings[b.rating] - ratings[a.rating];
+        });
+
+        // Ограничение по лимиту
+        const topItems = filteredItems.slice(0, limit);
+
         list.innerHTML = '';
-        items.forEach(item => {
+        topItems.forEach(item => {
             const div = document.createElement('div');
             const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;" loading="lazy">` : 'Нет изображения';
             const genreText = item.genre ? `Жанр: ${item.genre}` : '';
@@ -566,6 +588,27 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.addEventListener('click', function() {
                 const list = this.previousElementSibling;
                 list.scrollBy({ left: scrollStep, behavior: 'smooth' });
+            });
+        });
+    }
+
+    // Настройка фильтров в ТОП
+    function setupTopFilters() {
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const type = this.getAttribute('data-type');
+                const listId = `top-${type}-list`;
+                const transaction = db.transaction(['content'], 'readonly');
+                const objectStore = transaction.objectStore('content');
+                const index = objectStore.index('type');
+                const request = index.getAll(type);
+
+                request.onsuccess = function(event) {
+                    const items = event.target.result;
+                    const limit = type === 'films' || type === 'cartoons' || type === 'series' || type === 'cartoon-series' ? 15 : 10;
+                    renderTopList(listId, items, type, limit);
+                };
             });
         });
     }
