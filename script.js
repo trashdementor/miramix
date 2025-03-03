@@ -540,7 +540,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Инерция только для тач-событий
                 if (e.type === 'touchend' && Math.abs(velocity) > 0.5) {
-                    const momentum = velocity * 600; // Усиление инерции
+                    const momentum = velocity * 200; // Уменьшенное усиление инерции
                     const newScrollLeft = list.scrollLeft - momentum;
                     list.scrollTo({
                         left: Math.max(0, Math.min(newScrollLeft, list.scrollWidth - list.clientWidth)),
