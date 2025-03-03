@@ -510,23 +510,30 @@ document.addEventListener('DOMContentLoaded', function() {
             const blob = new Blob([json], { type: 'application/json' });
             console.log('Blob создан, размер:', blob.size);
 
+            const metadata = {
+                name: 'miramix_data.json',
+                mimeType: 'application/json'
+            };
+
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', blob);
+
             try {
-                const response = await gapi.client.drive.files.create({
-                    resource: {
-                        name: 'miramix_data.json',
-                        mimeType: 'application/json'
+                const response = await gapi.client.request({
+                    path: '/upload/drive/v3/files',
+                    method: 'POST',
+                    params: { uploadType: 'multipart' },
+                    headers: {
+                        'Content-Type': 'multipart/related; boundary=foo_bar_baz'
                     },
-                    media: {
-                        mimeType: 'application/json',
-                        body: blob
-                    },
-                    fields: 'id, name'
+                    body: form
                 });
-                alert('Данные успешно сохранены в Google Drive');
-                console.log('Файл сохранён в Drive:', response.result);
+                console.log('Файл успешно сохранён в Drive:', response.result);
+                alert('Данные успешно сохранены в Google Drive как miramix_data.json');
             } catch (error) {
-                console.error('Ошибка сохранения в Google Drive:', error);
-                alert('Ошибка сохранения в Google Drive: ' + error.message);
+                console.error('Ошибка при сохранении в Google Drive:', error);
+                alert('Ошибка при сохранении: ' + error.message);
             }
         };
 
