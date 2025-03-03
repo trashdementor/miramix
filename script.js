@@ -38,19 +38,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    function getTokenFromDB(callback) {
-        const transaction = db.transaction(['auth'], 'readonly');
-        const objectStore = transaction.objectStore('auth');
-        const request = objectStore.get('googleAccessToken');
-        request.onsuccess = function(event) {
-            callback(event.target.result ? event.target.result.value : null);
-        };
-        request.onerror = function(event) {
-            console.error('Ошибка получения токена из базы:', event.target.error);
-            callback(null);
-        };
-    }
-
     function saveTokenToDB(token) {
         const transaction = db.transaction(['auth'], 'readwrite');
         const objectStore = transaction.objectStore('auth');
@@ -69,29 +56,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 tokenClient = google.accounts.oauth2.initTokenClient({
                     client_id: CLIENT_ID,
                     scope: SCOPES,
-                    callback: (tokenResponse) => {
-                        if (tokenResponse && tokenResponse.access_token) {
-                            gapi.client.setToken(tokenResponse);
-                            saveTokenToDB(tokenResponse.access_token);
-                            document.getElementById('auth-google-btn').style.display = 'none';
-                            document.getElementById('save-to-drive-btn').style.display = 'inline';
-                            document.getElementById('load-from-drive-btn').style.display = 'inline';
-                            console.log('Авторизация успешна');
-                        }
-                    },
+                    callback: ''
                 });
 
-                getTokenFromDB((accessToken) => {
-                    if (accessToken) {
-                        gapi.client.setToken({ access_token: accessToken });
-                        document.getElementById('auth-google-btn').style.display = 'none';
-                        document.getElementById('save-to-drive-btn').style.display = 'inline';
-                        document.getElementById('load-from-drive-btn').style.display = 'inline';
-                        console.log('Использован сохранённый токен');
-                    } else {
-                        document.getElementById('auth-google-btn').addEventListener('click', handleAuthClick);
-                    }
-                });
+                // Проверяем, есть ли токен в базе, но не используем его автоматически
+                document.getElementById('auth-google-btn').addEventListener('click', handleAuthClick);
+                document.getElementById('save-to-drive-btn').style.display = 'inline';
+                document.getElementById('load-from-drive-btn').style.display = 'inline';
             } catch (error) {
                 console.error('Ошибка инициализации Google API:', error);
             }
@@ -102,24 +73,19 @@ document.addEventListener('DOMContentLoaded', function() {
         tokenClient.requestAccessToken();
     }
 
-    async function getValidAccessToken() {
-        return new Promise((resolve) => {
-            getTokenFromDB((accessToken) => {
-                if (accessToken) {
-                    resolve(accessToken);
+    async function getFreshAccessToken() {
+        return new Promise((resolve, reject) => {
+            tokenClient.callback = (tokenResponse) => {
+                if (tokenResponse && tokenResponse.access_token) {
+                    console.log('Получен новый токен:', tokenResponse.access_token);
+                    saveTokenToDB(tokenResponse.access_token);
+                    resolve(tokenResponse.access_token);
                 } else {
-                    tokenClient.callback = (tokenResponse) => {
-                        if (tokenResponse && tokenResponse.access_token) {
-                            saveTokenToDB(tokenResponse.access_token);
-                            resolve(tokenResponse.access_token);
-                        } else {
-                            console.error('Не удалось получить токен:', tokenResponse);
-                            resolve(null);
-                        }
-                    };
-                    tokenClient.requestAccessToken();
+                    console.error('Ошибка получения токена:', tokenResponse);
+                    reject(new Error('Не удалось получить токен доступа'));
                 }
-            });
+            };
+            tokenClient.requestAccessToken();
         });
     }
 
@@ -531,32 +497,28 @@ document.addEventListener('DOMContentLoaded', function() {
             const blob = new Blob([json], { type: 'application/json' });
             console.log('Blob создан, размер:', blob.size);
 
-            const accessToken = await getValidAccessToken();
-            if (!accessToken) {
-                alert('Не удалось получить токен доступа. Попробуйте авторизоваться заново.');
-                console.error('Токен доступа не получен');
-                return;
-            }
-
-            const boundary = 'foo_bar_baz';
-            const delimiter = `\r\n--${boundary}\r\n`;
-            const closeDelim = `\r\n--${boundary}--`;
-
-            const metadata = {
-                name: 'miramix_data.json',
-                mimeType: 'application/json'
-            };
-
-            const multipartBody = 
-                delimiter +
-                'Content-Type: application/json\r\n\r\n' +
-                JSON.stringify(metadata) +
-                delimiter +
-                'Content-Type: application/json\r\n\r\n' +
-                json +
-                closeDelim;
-
             try {
+                const accessToken = await getFreshAccessToken();
+                console.log('Используемый токен для запроса:', accessToken);
+
+                const boundary = 'foo_bar_baz';
+                const delimiter = `\r\n--${boundary}\r\n`;
+                const closeDelim = `\r\n--${boundary}--`;
+
+                const metadata = {
+                    name: 'miramix_data.json',
+                    mimeType: 'application/json'
+                };
+
+                const multipartBody = 
+                    delimiter +
+                    'Content-Type: application/json\r\n\r\n' +
+                    JSON.stringify(metadata) +
+                    delimiter +
+                    'Content-Type: application/json\r\n\r\n' +
+                    json +
+                    closeDelim;
+
                 const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
                     method: 'POST',
                     headers: {
@@ -587,14 +549,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('load-from-drive-btn').addEventListener('click', async function() {
-        const accessToken = await getValidAccessToken();
-        if (!accessToken) {
-            alert('Не удалось получить токен доступа. Попробуйте авторизоваться заново.');
-            console.error('Токен доступа не получен');
-            return;
-        }
-
         try {
+            const accessToken = await getFreshAccessToken();
+            console.log('Используемый токен для загрузки:', accessToken);
+
             const listResponse = await fetch('https://www.googleapis.com/drive/v3/files?q=name%3D%27miramix_data.json%27&fields=files(id,name,createdTime)&orderBy=createdTime%20desc', {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
