@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('База данных готова');
         loadTopContent();
         setupNavigation();
-        setupTopFilters();
     };
 
     request.onupgradeneeded = function(event) {
@@ -435,7 +434,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Топ контент с горизонтальной прокруткой
     function loadTopContent() {
-        if (!db) return;
+        if (!db) {
+            console.error('База данных не инициализирована');
+            return;
+        }
 
         const types = [
             { type: 'films', limit: 15, listId: 'top-films-list' },
@@ -457,55 +459,69 @@ document.addEventListener('DOMContentLoaded', function() {
             const request = index.getAll(type);
 
             request.onsuccess = function(event) {
-                let items = event.target.result;
-                renderTopList(listId, items, type, limit);
+                const items = event.target.result || [];
+                console.log(`Тип: ${type}, Загружено элементов: ${items.length}`);
+                console.log('Элементы до фильтрации:', items);
+                renderTopList(listId, items, limit);
+            };
+            request.onerror = function(event) {
+                console.error(`Ошибка загрузки данных для ${type}:`, event.target.error);
             };
         });
     }
 
-    function renderTopList(listId, items, type, limit) {
+    function renderTopList(listId, items, limit) {
         const list = document.getElementById(listId);
-        if (!list) return;
-
-        const statusFilter = document.getElementById(`top-${type}-status`).value;
-        const minRatingFilter = document.getElementById(`top-${type}-min-rating`).value;
-
-        let filteredItems = items;
-
-        // Фильтрация по статусу
-        if (statusFilter) {
-            filteredItems = filteredItems.filter(item => item.status === statusFilter);
+        if (!list) {
+            console.error(`Элемент с ID ${listId} не найден`);
+            return;
         }
 
-        // Фильтрация по минимальному рейтингу
-        if (minRatingFilter) {
-            const ratings = { '💀': 0, '💩': 1, '🍋': 2, '🍅': 3, '🍊': 4, '🍒': 5, '🌽': 6, '🧅': 7 };
-            const minRatingValue = parseInt(minRatingFilter);
-            filteredItems = filteredItems.filter(item => ratings[item.rating] >= minRatingValue);
-        }
+        // Фильтрация: только "Просмотрено" (🌕) и "В процессе" (🌗)
+        const allowedStatuses = ['🌕', '🌗'];
+        let filteredItems = items.filter(item => {
+            const statusMatch = allowedStatuses.includes(item.status);
+            return statusMatch;
+        });
 
-        // Сортировка по рейтингу
+        // Фильтрация: рейтинг от 4 до 7
+        const ratings = { '💀': 0, '💩': 1, '🍋': 2, '🍅': 3, '🍊': 4, '🍒': 5, '🌽': 6, '🧅': 7 };
+        filteredItems = filteredItems.filter(item => {
+            const ratingValue = ratings[item.rating];
+            const ratingMatch = ratingValue >= 4 && ratingValue <= 7;
+            return ratingMatch;
+        });
+
+        console.log(`После фильтрации для ${listId}: ${filteredItems.length} элементов`, filteredItems);
+
+        // Сортировка по рейтингу (убывание)
         filteredItems.sort((a, b) => {
-            const ratings = { '🧅': 7, '🌽': 6, '🍒': 5, '🍊': 4, '🍅': 3, '🍋': 2, '💩': 1, '💀': 0 };
-            return ratings[b.rating] - ratings[a.rating];
+            const ratingsOrder = { '🧅': 7, '🌽': 6, '🍒': 5, '🍊': 4, '🍅': 3, '🍋': 2, '💩': 1, '💀': 0 };
+            return ratingsOrder[b.rating] - ratingsOrder[a.rating];
         });
 
         // Ограничение по лимиту
         const topItems = filteredItems.slice(0, limit);
 
         list.innerHTML = '';
-        topItems.forEach(item => {
-            const div = document.createElement('div');
-            const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;" loading="lazy">` : 'Нет изображения';
-            const genreText = item.genre ? `Жанр: ${item.genre}` : '';
-            const yearText = item.year ? `Год: ${item.year}` : '';
-            const countryText = item.country ? `Страна: ${item.country}` : '';
-            const authorText = item.author ? `${item.type === 'books' || item.type === 'music' ? 'Автор' : 'Разработчик'}: ${item.author}` : '';
-            const descText = item.description ? `Описание: ${item.description}` : '';
-            div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} - Характеристика: ${item.characteristics.join(', ') || 'Нет'} 
-                ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''}`;
-            list.appendChild(div);
-        });
+        if (topItems.length === 0) {
+            console.log(`Нет элементов для отображения в ${listId}`);
+            list.innerHTML = '<p>Нет элементов, соответствующих критериям</p>';
+        } else {
+            topItems.forEach(item => {
+                const div = document.createElement('div');
+                const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;" loading="lazy">` : 'Нет изображения';
+                const genreText = item.genre ? `Жанр: ${item.genre}` : '';
+                const yearText = item.year ? `Год: ${item.year}` : '';
+                const countryText = item.country ? `Страна: ${item.country}` : '';
+                const authorText = item.author ? `${item.type === 'books' || item.type === 'music' ? 'Автор' : 'Разработчик'}: ${item.author}` : '';
+                const descText = item.description ? `Описание: ${item.description}` : '';
+                div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} - Характеристика: ${item.characteristics.join(', ') || 'Нет'} 
+                    ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''}`;
+                list.appendChild(div);
+            });
+            console.log(`Отрисовано ${topItems.length} элементов в ${listId}`);
+        }
 
         updateScrollIndicator(list);
     }
@@ -564,7 +580,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!isDragging) return;
                 isDragging = false;
 
-                // Инерция только для тач-событий
                 if (e.type === 'touchend' && Math.abs(velocity) > 0.5) {
                     const momentum = velocity * 200; // Уменьшенное усиление инерции
                     const newScrollLeft = list.scrollLeft - momentum;
@@ -588,27 +603,6 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.addEventListener('click', function() {
                 const list = this.previousElementSibling;
                 list.scrollBy({ left: scrollStep, behavior: 'smooth' });
-            });
-        });
-    }
-
-    // Настройка фильтров в ТОП
-    function setupTopFilters() {
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        filterButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const type = this.getAttribute('data-type');
-                const listId = `top-${type}-list`;
-                const transaction = db.transaction(['content'], 'readonly');
-                const objectStore = transaction.objectStore('content');
-                const index = objectStore.index('type');
-                const request = index.getAll(type);
-
-                request.onsuccess = function(event) {
-                    const items = event.target.result;
-                    const limit = type === 'films' || type === 'cartoons' || type === 'series' || type === 'cartoon-series' ? 15 : 10;
-                    renderTopList(listId, items, type, limit);
-                };
             });
         });
     }
