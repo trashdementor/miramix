@@ -212,7 +212,6 @@ body.modal-open {
     gap: 10px;
     width: 100%;
     padding: 0;
-    /* scroll-behavior удалён для мгновенного свайпа */
 }
 
 .content-list.horizontal div {
@@ -325,7 +324,7 @@ body.modal-open {
     }
 
     .prev-btn, .next-btn {
-        padding: 3px 8px; /* Уменьшаем кнопки на мобильных */
+        display: none; /* Скрываем стрелки на мобильных */
     }
 }
 
