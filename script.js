@@ -56,21 +56,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 tokenClient = google.accounts.oauth2.initTokenClient({
                     client_id: CLIENT_ID,
                     scope: SCOPES,
-                    callback: ''
+                    callback: (tokenResponse) => {
+                        if (tokenResponse && tokenResponse.access_token) {
+                            console.log('Получен новый токен:', tokenResponse.access_token);
+                            saveTokenToDB(tokenResponse.access_token);
+                            document.getElementById('auth-google-btn').style.display = 'none';
+                            document.getElementById('save-to-drive-btn').style.display = 'inline';
+                            document.getElementById('load-from-drive-btn').style.display = 'inline';
+                        } else {
+                            console.error('Ошибка авторизации:', tokenResponse);
+                        }
+                    }
                 });
 
-                // Проверяем, есть ли токен в базе, но не используем его автоматически
-                document.getElementById('auth-google-btn').addEventListener('click', handleAuthClick);
+                document.getElementById('auth-google-btn').addEventListener('click', () => {
+                    tokenClient.requestAccessToken();
+                });
                 document.getElementById('save-to-drive-btn').style.display = 'inline';
                 document.getElementById('load-from-drive-btn').style.display = 'inline';
             } catch (error) {
                 console.error('Ошибка инициализации Google API:', error);
             }
         });
-    }
-
-    function handleAuthClick() {
-        tokenClient.requestAccessToken();
     }
 
     async function getFreshAccessToken() {
@@ -499,6 +506,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             try {
                 const accessToken = await getFreshAccessToken();
+                if (!accessToken) {
+                    throw new Error('Токен не получен');
+                }
                 console.log('Используемый токен для запроса:', accessToken);
 
                 const boundary = 'foo_bar_baz';
@@ -551,6 +561,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('load-from-drive-btn').addEventListener('click', async function() {
         try {
             const accessToken = await getFreshAccessToken();
+            if (!accessToken) {
+                throw new Error('Токен не получен');
+            }
             console.log('Используемый токен для загрузки:', accessToken);
 
             const listResponse = await fetch('https://www.googleapis.com/drive/v3/files?q=name%3D%27miramix_data.json%27&fields=files(id,name,createdTime)&orderBy=createdTime%20desc', {
