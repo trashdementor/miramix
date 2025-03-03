@@ -1,1 +1,1 @@
-https://trashdementor.github.io/otherbio/
+https://trashdementor.github.io/miramix/
