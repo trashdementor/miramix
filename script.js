@@ -1,13 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     let db;
-    const request = indexedDB.open('MiraMIXDB', 3);
+    const request = indexedDB.open('MiraMIXDB', 4);
 
-    // Google Drive API настройки
     const CLIENT_ID = '707439660280-hat6arhn868djnimb3bnf418bp2hnjlc.apps.googleusercontent.com';
     const API_KEY = 'AIzaSyDGczTbyZV_CpeEMRpkzPrDPOxwaCR6vbk';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
     let tokenClient;
-    let accessToken = localStorage.getItem('googleAccessToken');
 
     request.onerror = function(event) {
         console.error('Ошибка IndexedDB:', event.target.errorCode);
@@ -33,28 +31,32 @@ document.addEventListener('DOMContentLoaded', function() {
             objectStore.createIndex('characteristics', 'characteristics', { unique: false });
             objectStore.createIndex('rating', 'rating', { unique: false });
             objectStore.createIndex('image', 'image', { unique: false });
-        } else {
-            objectStore = event.target.transaction.objectStore('content');
         }
 
-        if (!objectStore.indexNames.contains('genre')) {
-            objectStore.createIndex('genre', 'genre', { unique: false });
-        }
-        if (!objectStore.indexNames.contains('year')) {
-            objectStore.createIndex('year', 'year', { unique: false });
-        }
-        if (!objectStore.indexNames.contains('country')) {
-            objectStore.createIndex('country', 'country', { unique: false });
-        }
-        if (!objectStore.indexNames.contains('author')) {
-            objectStore.createIndex('author', 'author', { unique: false });
-        }
-        if (!objectStore.indexNames.contains('description')) {
-            objectStore.createIndex('description', 'description', { unique: false });
+        if (!db.objectStoreNames.contains('auth')) {
+            objectStore = db.createObjectStore('auth', { keyPath: 'key' });
         }
     };
 
-    // Инициализация Google Drive API
+    function getTokenFromDB(callback) {
+        const transaction = db.transaction(['auth'], 'readonly');
+        const objectStore = transaction.objectStore('auth');
+        const request = objectStore.get('googleAccessToken');
+        request.onsuccess = function(event) {
+            callback(event.target.result ? event.target.result.value : null);
+        };
+        request.onerror = function(event) {
+            console.error('Ошибка получения токена из базы:', event.target.error);
+            callback(null);
+        };
+    }
+
+    function saveTokenToDB(token) {
+        const transaction = db.transaction(['auth'], 'readwrite');
+        const objectStore = transaction.objectStore('auth');
+        objectStore.put({ key: 'googleAccessToken', value: token });
+    }
+
     function initGoogleDrive() {
         gapi.load('client', async () => {
             try {
@@ -70,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     callback: (tokenResponse) => {
                         if (tokenResponse && tokenResponse.access_token) {
                             gapi.client.setToken(tokenResponse);
-                            localStorage.setItem('googleAccessToken', tokenResponse.access_token);
+                            saveTokenToDB(tokenResponse.access_token);
                             document.getElementById('auth-google-btn').style.display = 'none';
                             document.getElementById('save-to-drive-btn').style.display = 'inline';
                             document.getElementById('load-from-drive-btn').style.display = 'inline';
@@ -79,15 +81,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                 });
 
-                if (accessToken) {
-                    gapi.client.setToken({ access_token: accessToken });
-                    document.getElementById('auth-google-btn').style.display = 'none';
-                    document.getElementById('save-to-drive-btn').style.display = 'inline';
-                    document.getElementById('load-from-drive-btn').style.display = 'inline';
-                    console.log('Использован сохранённый токен');
-                } else {
-                    document.getElementById('auth-google-btn').addEventListener('click', handleAuthClick);
-                }
+                getTokenFromDB((accessToken) => {
+                    if (accessToken) {
+                        gapi.client.setToken({ access_token: accessToken });
+                        document.getElementById('auth-google-btn').style.display = 'none';
+                        document.getElementById('save-to-drive-btn').style.display = 'inline';
+                        document.getElementById('load-from-drive-btn').style.display = 'inline';
+                        console.log('Использован сохранённый токен');
+                    } else {
+                        document.getElementById('auth-google-btn').addEventListener('click', handleAuthClick);
+                    }
+                });
             } catch (error) {
                 console.error('Ошибка инициализации Google API:', error);
             }
@@ -98,7 +102,6 @@ document.addEventListener('DOMContentLoaded', function() {
         tokenClient.requestAccessToken();
     }
 
-    // Навигация
     const sections = document.querySelectorAll('.section');
     const links = document.querySelectorAll('nav a');
 
@@ -115,7 +118,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Добавление ресурса
     document.getElementById('add-resource-form').addEventListener('submit', async function(e) {
         e.preventDefault();
         if (!db) {
@@ -190,7 +192,6 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
-    // Поиск с кнопкой
     function setupSearch(type) {
         let prefix;
         switch(type) {
@@ -282,7 +283,6 @@ document.addEventListener('DOMContentLoaded', function() {
         performSearch();
     }
 
-    // Удаление
     window.deleteItem = function(id, type) {
         if (!db) return;
         const transaction = db.transaction(['content'], 'readwrite');
@@ -295,7 +295,6 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     };
 
-    // Редактирование
     window.editItem = async function(id, type) {
         if (!db) return;
         const transaction = db.transaction(['content'], 'readonly');
@@ -410,7 +409,6 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
-    // Экспорт данных локально
     document.getElementById('export-btn').addEventListener('click', function() {
         if (!db) {
             alert('База данных ещё не готова.');
@@ -437,7 +435,6 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     });
 
-    // Импорт данных локально
     document.getElementById('import-btn').addEventListener('click', function() {
         document.getElementById('import-file').click();
     });
@@ -484,8 +481,7 @@ document.addEventListener('DOMContentLoaded', function() {
         reader.readAsText(file);
     });
 
-    // Сохранение в Google Drive
-    document.getElementById('save-to-drive-btn').addEventListener('click', function() {
+    document.getElementById('save-to-drive-btn').addEventListener('click', async function() {
         if (!db) {
             alert('База данных ещё не готова.');
             return;
@@ -495,35 +491,45 @@ document.addEventListener('DOMContentLoaded', function() {
         const objectStore = transaction.objectStore('content');
         const request = objectStore.getAll();
 
-        request.onsuccess = function(event) {
+        request.onsuccess = async function(event) {
             const data = event.target.result;
+            if (!data || data.length === 0) {
+                alert('Нет данных для сохранения.');
+                console.log('Данные из базы:', data);
+                return;
+            }
+
             const json = JSON.stringify(data, null, 2);
             const blob = new Blob([json], { type: 'application/json' });
             const metadata = {
                 name: 'miramix_data.json',
-                mimeType: 'application/json',
+                mimeType: 'application/json'
             };
 
             const form = new FormData();
             form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
             form.append('file', blob);
 
-            gapi.client.request({
-                path: '/upload/drive/v3/files',
-                method: 'POST',
-                params: { uploadType: 'multipart' },
-                body: form
-            }).then(response => {
+            try {
+                const response = await gapi.client.request({
+                    path: '/upload/drive/v3/files',
+                    method: 'POST',
+                    params: { uploadType: 'multipart' },
+                    body: form
+                });
                 alert('Данные успешно сохранены в Google Drive');
                 console.log('Файл сохранён в Drive:', response.result);
-            }).catch(error => {
+            } catch (error) {
                 console.error('Ошибка сохранения в Google Drive:', error);
-                alert('Ошибка сохранения в Google Drive');
-            });
+                alert('Ошибка сохранения в Google Drive: ' + error.message);
+            }
+        };
+        request.onerror = function(event) {
+            console.error('Ошибка получения данных из базы:', event.target.error);
+            alert('Ошибка получения данных из базы');
         };
     });
 
-    // Загрузка из Google Drive
     document.getElementById('load-from-drive-btn').addEventListener('click', function() {
         gapi.client.drive.files.list({
             q: "name='miramix_data.json'",
@@ -578,7 +584,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Топ контент с горизонтальной прокруткой
     function loadTopContent() {
         if (!db) {
             console.error('База данных не инициализирована');
