@@ -207,7 +207,7 @@ body.modal-open {
 
 .content-list.horizontal {
     display: flex;
-    flex-direction: row-reverse; /* Справа налево */
+    flex-direction: row; /* Начало слева */
     overflow-x: auto; /* Прокрутка при необходимости */
     gap: 10px;
     width: 100%;
