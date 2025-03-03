@@ -94,6 +94,13 @@ main {
     cursor: pointer;
 }
 
+.content-list {
+    padding: 10px;
+    background-color: #4E4E50;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
 .content-list div {
     padding: 10px;
     background-color: #4E4E50;
@@ -159,10 +166,10 @@ form button {
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Изменяем выравнивание для прокрутки */
+    align-items: flex-start;
     z-index: 1000;
-    padding: 10px; /* Добавляем отступы */
-    overflow-y: hidden; /* Убираем прокрутку фона */
+    padding: 10px;
+    overflow-y: hidden;
 }
 
 .modal-content {
@@ -171,12 +178,11 @@ form button {
     border-radius: 8px;
     width: 400px;
     max-width: 90%;
-    max-height: 80vh; /* Ограничиваем высоту */
-    overflow-y: auto; /* Прокрутка внутри окна */
+    max-height: 80vh;
+    overflow-y: auto;
     box-sizing: border-box;
 }
 
-/* Блокируем прокрутку body при открытом модальном окне */
 body.modal-open {
     overflow: hidden;
 }
@@ -186,6 +192,53 @@ body.modal-open {
     font-size: 24px;
     cursor: pointer;
     color: #66FCF1;
+}
+
+/* Стили для ТОПа */
+.top-section {
+    margin-bottom: 20px;
+}
+
+.top-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.content-list.horizontal {
+    display: flex;
+    flex-direction: row-reverse; /* Справа налево */
+    overflow-x: hidden;
+    gap: 10px;
+    width: 100%;
+    max-width: 600px; /* Ограничение ширины для читаемости */
+    padding: 0;
+}
+
+.content-list.horizontal div {
+    flex: 0 0 auto;
+    width: 200px; /* Фиксированная ширина элемента */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px;
+    background-color: #4E4E50;
+    border-radius: 4px;
+}
+
+.content-list.horizontal img {
+    width: 100px;
+    height: 150px;
+    border-radius: 4px;
+}
+
+.prev-btn, .next-btn {
+    padding: 5px 10px;
+    background-color: #66FCF1;
+    color: #1A1A1D;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 /* Адаптивный дизайн */
@@ -261,6 +314,19 @@ body.modal-open {
         padding: 15px;
         max-height: 70vh;
     }
+
+    .content-list.horizontal {
+        max-width: 100%;
+    }
+
+    .content-list.horizontal div {
+        width: 150px;
+    }
+
+    .content-list.horizontal img {
+        width: 80px;
+        height: 120px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -280,5 +346,14 @@ body.modal-open {
 
     .modal-content {
         max-height: 60vh;
+    }
+
+    .content-list.horizontal div {
+        width: 120px;
+    }
+
+    .content-list.horizontal img {
+        width: 60px;
+        height: 90px;
     }
 }
