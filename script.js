@@ -44,7 +44,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const objectStore = transaction.objectStore('auth');
             const request = objectStore.get('googleAccessToken');
             request.onsuccess = function(event) {
-                resolve(event.target.result ? event.target.result.value : null);
+                const token = event.target.result ? event.target.result.value : null;
+                console.log('Извлечён токен из базы:', token);
+                resolve(token);
             };
             request.onerror = function(event) {
                 console.error('Ошибка получения токена из базы:', event.target.error);
@@ -59,6 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const objectStore = transaction.objectStore('auth');
             const request = objectStore.put({ key: 'googleAccessToken', value: token });
             request.onsuccess = function() {
+                console.log('Токен сохранён в базу:', token);
                 resolve();
             };
             request.onerror = function(event) {
@@ -95,11 +98,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const token = await getTokenFromDB();
                 if (token && await isTokenValid(token)) {
-                    console.log('Использован сохранённый токен:', token);
+                    console.log('Использован сохранённый токен при инициализации:', token);
                     document.getElementById('auth-google-btn').style.display = 'none';
                     document.getElementById('save-to-drive-btn').style.display = 'inline';
                     document.getElementById('load-from-drive-btn').style.display = 'inline';
                 } else {
+                    console.log('Токен отсутствует или недействителен, требуется авторизация');
                     document.getElementById('auth-google-btn').addEventListener('click', () => {
                         tokenClient.requestAccessToken();
                     });
@@ -117,9 +121,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            return response.ok;
+            const isValid = response.ok;
+            console.log('Проверка токена:', token, 'Валиден:', isValid, 'Статус:', response.status);
+            if (!isValid) {
+                const errorText = await response.text();
+                console.error('Ошибка проверки токена:', errorText);
+            }
+            return isValid;
         } catch (error) {
-            console.error('Токен недействителен:', error);
+            console.error('Ошибка при проверке токена:', error);
             return false;
         }
     }
@@ -131,6 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return token;
         }
 
+        console.log('Токен недействителен или отсутствует, запрашивается новый');
         return new Promise((resolve, reject) => {
             tokenClient.callback = (tokenResponse) => {
                 if (tokenResponse && tokenResponse.access_token) {
@@ -559,7 +570,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!accessToken) {
                     throw new Error('Токен не получен');
                 }
-                console.log('Используемый токен для запроса:', accessToken);
+                console.log('Используемый токен для сохранения:', accessToken);
 
                 const boundary = 'foo_bar_baz';
                 const delimiter = `\r\n--${boundary}\r\n`;
@@ -623,7 +634,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (!listResponse.ok) {
-                throw new Error('Ошибка поиска файла: ' + listResponse.statusText);
+                const errorText = await listResponse.text();
+                throw new Error(`Ошибка поиска файла: ${listResponse.status} - ${errorText}`);
             }
 
             const listData = await listResponse.json();
@@ -637,7 +649,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
 
                 if (!fileResponse.ok) {
-                    throw new Error('Ошибка загрузки файла: ' + fileResponse.statusText);
+                    const errorText = await fileResponse.text();
+                    throw new Error(`Ошибка загрузки файла: ${fileResponse.status} - ${errorText}`);
                 }
 
                 const data = await fileResponse.json();
