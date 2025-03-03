@@ -68,16 +68,20 @@ main {
     display: block;
 }
 
-.search-menu {
+.search-menu, .filter-menu {
     margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
 }
 
-.search-menu label {
+.search-menu label, .filter-menu label {
     margin-right: 10px;
     color: #66FCF1;
 }
 
-.search-menu select, .search-menu input {
+.search-menu select, .search-menu input, .filter-menu select {
     margin-right: 20px;
     padding: 5px;
     background-color: #C5C6C7;
@@ -85,7 +89,7 @@ main {
     border-radius: 4px;
 }
 
-.search-menu button {
+.search-menu button, .filter-menu button {
     padding: 5px 10px;
     background-color: #66FCF1;
     color: #1A1A1D;
@@ -300,17 +304,17 @@ body.modal-open {
         padding: 10px;
     }
 
-    .search-menu {
+    .search-menu, .filter-menu {
         display: flex;
         flex-direction: column;
         gap: 10px;
     }
 
-    .search-menu label {
+    .search-menu label, .filter-menu label {
         margin-right: 0;
     }
 
-    .search-menu select, .search-menu input {
+    .search-menu select, .search-menu input, .filter-menu select {
         margin-right: 0;
         width: 100%;
     }
