@@ -496,10 +496,10 @@ document.addEventListener('DOMContentLoaded', function() {
             let startX = 0;
             let scrollLeft = 0;
             let isDragging = false;
+            let velocity = 0;
             let lastX = 0;
             let lastTime = 0;
 
-            // Универсальные события для ПК и мобильных
             list.addEventListener('mousedown', startDragging);
             list.addEventListener('mousemove', drag);
             list.addEventListener('mouseup', stopDragging);
@@ -515,7 +515,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 scrollLeft = list.scrollLeft;
                 lastX = startX;
                 lastTime = Date.now();
-                list.style.transition = 'none'; // Отключаем анимацию для свайпа
+                list.style.transition = 'none';
             }
 
             function drag(e) {
@@ -525,28 +525,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 const delta = x - startX;
                 list.scrollLeft = scrollLeft - delta;
 
-                // Обновляем последние значения для расчёта скорости
-                lastX = x;
-                lastTime = Date.now();
+                const timeNow = Date.now();
+                const timeDelta = timeNow - lastTime;
+                if (timeDelta > 0) {
+                    velocity = (x - lastX) / timeDelta; // Скорость в px/мс
+                    lastX = x;
+                    lastTime = timeNow;
+                }
             }
 
             function stopDragging(e) {
                 if (!isDragging) return;
                 isDragging = false;
 
-                // Расчёт скорости для инерции (только для touch)
-                if (e.type === 'touchend') {
-                    const timeDelta = Date.now() - lastTime;
-                    const velocity = timeDelta > 0 ? (lastX - startX) / timeDelta : 0; // px/мс
-
-                    if (Math.abs(velocity) > 0.5) { // Порог скорости для резкого свайпа
-                        const momentum = velocity * 600; // Инерция
-                        const newScrollLeft = list.scrollLeft - momentum;
-                        list.scrollTo({
-                            left: Math.max(0, Math.min(newScrollLeft, list.scrollWidth - list.clientWidth)),
-                            behavior: 'smooth'
-                        });
-                    }
+                // Инерция только для тач-событий
+                if (e.type === 'touchend' && Math.abs(velocity) > 0.5) {
+                    const momentum = velocity * 600; // Усиление инерции
+                    const newScrollLeft = list.scrollLeft - momentum;
+                    list.scrollTo({
+                        left: Math.max(0, Math.min(newScrollLeft, list.scrollWidth - list.clientWidth)),
+                        behavior: 'smooth'
+                    });
                 }
             }
         });
