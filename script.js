@@ -38,10 +38,34 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    function getTokenFromDB() {
+        return new Promise((resolve) => {
+            const transaction = db.transaction(['auth'], 'readonly');
+            const objectStore = transaction.objectStore('auth');
+            const request = objectStore.get('googleAccessToken');
+            request.onsuccess = function(event) {
+                resolve(event.target.result ? event.target.result.value : null);
+            };
+            request.onerror = function(event) {
+                console.error('Ошибка получения токена из базы:', event.target.error);
+                resolve(null);
+            };
+        });
+    }
+
     function saveTokenToDB(token) {
-        const transaction = db.transaction(['auth'], 'readwrite');
-        const objectStore = transaction.objectStore('auth');
-        objectStore.put({ key: 'googleAccessToken', value: token });
+        return new Promise((resolve) => {
+            const transaction = db.transaction(['auth'], 'readwrite');
+            const objectStore = transaction.objectStore('auth');
+            const request = objectStore.put({ key: 'googleAccessToken', value: token });
+            request.onsuccess = function() {
+                resolve();
+            };
+            request.onerror = function(event) {
+                console.error('Ошибка сохранения токена в базу:', event.target.error);
+                resolve();
+            };
+        });
     }
 
     function initGoogleDrive() {
@@ -69,18 +93,44 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
 
-                document.getElementById('auth-google-btn').addEventListener('click', () => {
-                    tokenClient.requestAccessToken();
-                });
-                document.getElementById('save-to-drive-btn').style.display = 'inline';
-                document.getElementById('load-from-drive-btn').style.display = 'inline';
+                const token = await getTokenFromDB();
+                if (token && await isTokenValid(token)) {
+                    console.log('Использован сохранённый токен:', token);
+                    document.getElementById('auth-google-btn').style.display = 'none';
+                    document.getElementById('save-to-drive-btn').style.display = 'inline';
+                    document.getElementById('load-from-drive-btn').style.display = 'inline';
+                } else {
+                    document.getElementById('auth-google-btn').addEventListener('click', () => {
+                        tokenClient.requestAccessToken();
+                    });
+                }
             } catch (error) {
                 console.error('Ошибка инициализации Google API:', error);
             }
         });
     }
 
-    async function getFreshAccessToken() {
+    async function isTokenValid(token) {
+        try {
+            const response = await fetch('https://www.googleapis.com/drive/v3/about?fields=user', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            return response.ok;
+        } catch (error) {
+            console.error('Токен недействителен:', error);
+            return false;
+        }
+    }
+
+    async function getAccessToken() {
+        let token = await getTokenFromDB();
+        if (token && await isTokenValid(token)) {
+            console.log('Используется существующий токен:', token);
+            return token;
+        }
+
         return new Promise((resolve, reject) => {
             tokenClient.callback = (tokenResponse) => {
                 if (tokenResponse && tokenResponse.access_token) {
@@ -505,7 +555,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Blob создан, размер:', blob.size);
 
             try {
-                const accessToken = await getFreshAccessToken();
+                const accessToken = await getAccessToken();
                 if (!accessToken) {
                     throw new Error('Токен не получен');
                 }
@@ -560,7 +610,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('load-from-drive-btn').addEventListener('click', async function() {
         try {
-            const accessToken = await getFreshAccessToken();
+            const accessToken = await getAccessToken();
             if (!accessToken) {
                 throw new Error('Токен не получен');
             }
