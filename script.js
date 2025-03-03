@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const API_KEY = 'AIzaSyDGczTbyZV_CpeEMRpkzPrDPOxwaCR6vbk';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
     let tokenClient;
+    let accessToken = localStorage.getItem('googleAccessToken'); // Проверяем сохранённый токен
 
     request.onerror = function(event) {
         console.error('Ошибка IndexedDB:', event.target.errorCode);
@@ -62,12 +63,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
                 });
                 console.log('Google Drive API инициализирован');
+
                 tokenClient = google.accounts.oauth2.initTokenClient({
                     client_id: CLIENT_ID,
                     scope: SCOPES,
                     callback: (tokenResponse) => {
                         if (tokenResponse && tokenResponse.access_token) {
                             gapi.client.setToken(tokenResponse);
+                            localStorage.setItem('googleAccessToken', tokenResponse.access_token);
                             document.getElementById('auth-google-btn').style.display = 'none';
                             document.getElementById('save-to-drive-btn').style.display = 'inline';
                             document.getElementById('load-from-drive-btn').style.display = 'inline';
@@ -75,7 +78,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     },
                 });
-                document.getElementById('auth-google-btn').addEventListener('click', handleAuthClick);
+
+                if (accessToken) {
+                    gapi.client.setToken({ access_token: accessToken });
+                    document.getElementById('auth-google-btn').style.display = 'none';
+                    document.getElementById('save-to-drive-btn').style.display = 'inline';
+                    document.getElementById('load-from-drive-btn').style.display = 'inline';
+                    console.log('Использован сохранённый токен');
+                } else {
+                    document.getElementById('auth-google-btn').addEventListener('click', handleAuthClick);
+                }
             } catch (error) {
                 console.error('Ошибка инициализации Google API:', error);
             }
@@ -658,9 +670,6 @@ document.addEventListener('DOMContentLoaded', function() {
             let startX = 0;
             let scrollLeft = 0;
             let isDragging = false;
-            let velocity = 0;
-            let lastX = 0;
-            let lastTime = 0;
 
             list.addEventListener('mousedown', startDragging);
             list.addEventListener('mousemove', drag);
@@ -677,9 +686,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 isDragging = true;
                 startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
                 scrollLeft = list.scrollLeft;
-                lastX = startX;
-                lastTime = Date.now();
-                list.style.transition = 'none';
             }
 
             function drag(e) {
@@ -688,28 +694,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const x = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
                 const delta = x - startX;
                 list.scrollLeft = scrollLeft - delta;
-
-                const timeNow = Date.now();
-                const timeDelta = timeNow - lastTime;
-                if (timeDelta > 0) {
-                    velocity = (x - lastX) / timeDelta;
-                    lastX = x;
-                    lastTime = timeNow;
-                }
             }
 
-            function stopDragging(e) {
-                if (!isDragging) return;
+            function stopDragging() {
                 isDragging = false;
-
-                if (e.type === 'touchend' && Math.abs(velocity) > 0.5) {
-                    const momentum = velocity * 200;
-                    const newScrollLeft = list.scrollLeft - momentum;
-                    list.scrollTo({
-                        left: Math.max(0, Math.min(newScrollLeft, list.scrollWidth - list.clientWidth)),
-                        behavior: 'smooth'
-                    });
-                }
             }
         });
 
