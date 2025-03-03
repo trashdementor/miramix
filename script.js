@@ -511,6 +511,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 isDragging = true;
                 startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
                 scrollLeft = list.scrollLeft;
+                list.style.transition = 'none'; // Отключаем анимацию для свайпа
             }
 
             function drag(e) {
@@ -530,14 +531,14 @@ document.addEventListener('DOMContentLoaded', function() {
         prevButtons.forEach(btn => {
             btn.addEventListener('click', function() {
                 const list = this.nextElementSibling;
-                list.scrollLeft -= scrollStep;
+                list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
             });
         });
 
         nextButtons.forEach(btn => {
             btn.addEventListener('click', function() {
                 const list = this.previousElementSibling;
-                list.scrollLeft += scrollStep;
+                list.scrollBy({ left: scrollStep, behavior: 'smooth' });
             });
         });
     }
