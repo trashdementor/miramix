@@ -494,10 +494,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         topLists.forEach(list => {
             let startX = 0;
-            let startTime = 0;
             let scrollLeft = 0;
             let isDragging = false;
-            let velocity = 0;
+            let lastX = 0;
+            let lastTime = 0;
 
             // Универсальные события для ПК и мобильных
             list.addEventListener('mousedown', startDragging);
@@ -512,9 +512,9 @@ document.addEventListener('DOMContentLoaded', function() {
             function startDragging(e) {
                 isDragging = true;
                 startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-                startTime = Date.now();
                 scrollLeft = list.scrollLeft;
-                velocity = 0;
+                lastX = startX;
+                lastTime = Date.now();
                 list.style.transition = 'none'; // Отключаем анимацию для свайпа
             }
 
@@ -525,29 +525,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 const delta = x - startX;
                 list.scrollLeft = scrollLeft - delta;
 
-                const timeDelta = Date.now() - startTime;
-                if (timeDelta > 0) {
-                    velocity = delta / timeDelta; // Скорость в пикселях/мс
-                }
+                // Обновляем последние значения для расчёта скорости
+                lastX = x;
+                lastTime = Date.now();
             }
 
             function stopDragging(e) {
                 if (!isDragging) return;
                 isDragging = false;
 
-                // Инерция только для мобильных (тач-события)
-                if (e.type === 'touchend' && Math.abs(velocity) > 0.3) { // Порог скорости для резкого свайпа
-                    const momentum = velocity * 500; // Усиление инерции
-                    const newScrollLeft = list.scrollLeft - momentum;
-                    list.scrollTo({
-                        left: Math.max(0, Math.min(newScrollLeft, list.scrollWidth - list.clientWidth)),
-                        behavior: 'smooth'
-                    });
+                // Расчёт скорости для инерции (только для touch)
+                if (e.type === 'touchend') {
+                    const timeDelta = Date.now() - lastTime;
+                    const velocity = timeDelta > 0 ? (lastX - startX) / timeDelta : 0; // px/мс
+
+                    if (Math.abs(velocity) > 0.5) { // Порог скорости для резкого свайпа
+                        const momentum = velocity * 600; // Инерция
+                        const newScrollLeft = list.scrollLeft - momentum;
+                        list.scrollTo({
+                            left: Math.max(0, Math.min(newScrollLeft, list.scrollWidth - list.clientWidth)),
+                            behavior: 'smooth'
+                        });
+                    }
                 }
             }
         });
 
-        // Стрелки только для ПК
+        // Стрелки для ПК
         prevButtons.forEach(btn => {
             btn.addEventListener('click', function() {
                 const list = this.nextElementSibling;
