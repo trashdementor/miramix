@@ -234,6 +234,16 @@ body.modal-open {
     padding: 10px;
     background-color: #4E4E50;
     border-radius: 4px;
+    opacity: 0; /* Начальная прозрачность для анимации */
+    transform: translateY(20px); /* Начальное смещение вниз */
+    animation: fadeInUp 0.5s ease forwards; /* Анимация появления */
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .content-list.horizontal img {
