@@ -491,26 +491,34 @@ document.addEventListener('DOMContentLoaded', function() {
         const prevButtons = document.querySelectorAll('.prev-btn');
         const nextButtons = document.querySelectorAll('.next-btn');
         const scrollStep = 200; // Шаг прокрутки в пикселях (ширина одного блока)
+        const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
-        // Поддержка свайпа
         topLists.forEach(list => {
             let startX = 0;
+            let startTime = 0;
             let scrollLeft = 0;
             let isDragging = false;
+            let velocity = 0;
 
-            list.addEventListener('mousedown', startDragging);
-            list.addEventListener('mousemove', drag);
-            list.addEventListener('mouseup', stopDragging);
-            list.addEventListener('mouseleave', stopDragging);
-
-            list.addEventListener('touchstart', startDragging);
-            list.addEventListener('touchmove', drag);
-            list.addEventListener('touchend', stopDragging);
+            if (isMobile) {
+                // Мобильный свайп с инерцией и скоростью
+                list.addEventListener('touchstart', startDragging);
+                list.addEventListener('touchmove', drag);
+                list.addEventListener('touchend', stopDragging);
+            } else {
+                // ПК свайп без инерции
+                list.addEventListener('mousedown', startDragging);
+                list.addEventListener('mousemove', drag);
+                list.addEventListener('mouseup', stopDragging);
+                list.addEventListener('mouseleave', stopDragging);
+            }
 
             function startDragging(e) {
                 isDragging = true;
                 startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+                startTime = Date.now();
                 scrollLeft = list.scrollLeft;
+                velocity = 0;
                 list.style.transition = 'none'; // Отключаем анимацию для свайпа
             }
 
@@ -520,26 +528,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 const x = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
                 const delta = x - startX;
                 list.scrollLeft = scrollLeft - delta;
+
+                if (isMobile) {
+                    const timeDelta = Date.now() - startTime;
+                    if (timeDelta > 0) {
+                        velocity = delta / timeDelta; // Скорость в пикселях/мс
+                    }
+                }
             }
 
-            function stopDragging() {
+            function stopDragging(e) {
+                if (!isDragging) return;
                 isDragging = false;
+
+                if (isMobile && Math.abs(velocity) > 0.5) { // Порог скорости для резкого свайпа
+                    const momentum = velocity * 600; // Усиление для прокрутки на несколько позиций
+                    const newScrollLeft = list.scrollLeft - momentum;
+                    list.scrollTo({
+                        left: Math.max(0, Math.min(newScrollLeft, list.scrollWidth - list.clientWidth)),
+                        behavior: 'smooth'
+                    });
+                }
             }
         });
 
-        // Обработка кликов по кнопкам
-        prevButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const list = this.nextElementSibling;
-                list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
+        // Обработка кликов по кнопкам (только для ПК)
+        if (!isMobile) {
+            prevButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const list = this.nextElementSibling;
+                    list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
+                });
             });
-        });
 
-        nextButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const list = this.previousElementSibling;
-                list.scrollBy({ left: scrollStep, behavior: 'smooth' });
+            nextButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const list = this.previousElementSibling;
+                    list.scrollBy({ left: scrollStep, behavior: 'smooth' });
+                });
             });
-        });
+        }
     }
 });
