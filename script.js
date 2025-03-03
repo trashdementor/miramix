@@ -493,13 +493,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         request.onsuccess = async function(event) {
             const data = event.target.result;
+            console.log('Данные из базы перед сохранением:', data);
             if (!data || data.length === 0) {
                 alert('Нет данных для сохранения.');
-                console.log('Данные из базы:', data);
                 return;
             }
 
             const json = JSON.stringify(data, null, 2);
+            console.log('JSON для сохранения:', json);
             const blob = new Blob([json], { type: 'application/json' });
             const metadata = {
                 name: 'miramix_data.json',
