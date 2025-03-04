@@ -764,7 +764,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     function animateScroll() {
                         const currentTime = performance.now();
                         const timeDiff = currentTime - lastTime;
-                        list.scrollLeft -= velocity * timeDiff * 20; // Уменьшил с 60 до 20
+                        list.scrollLeft -= velocity * timeDiff * 5; // Уменьшил с 20 до 5
                         velocity *= 0.95;
 
                         if (list.scrollLeft <= 0 || list.scrollLeft >= list.scrollWidth - list.clientWidth) {
