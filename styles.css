@@ -81,11 +81,11 @@ main {
 }
 
 .section {
-    display: none; /* Скрываем все разделы по умолчанию */
+    display: none;
 }
 
 .section.active {
-    display: block; /* Показываем только активный раздел */
+    display: block;
 }
 
 .search-menu {
@@ -244,11 +244,11 @@ body.modal-open {
     gap: 10px;
     width: 100%;
     padding: 0;
-    -ms-overflow-style: none; /* IE и Edge */
-    scrollbar-width: none; /* Firefox */
-    -webkit-overflow-scrolling: touch; /* Инерция для iOS/Android */
-    touch-action: pan-x; /* Только горизонтальная прокрутка */
-    user-select: none; /* Запрет выделения текста */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    user-select: none;
 }
 
 .content-list.horizontal::-webkit-scrollbar {
