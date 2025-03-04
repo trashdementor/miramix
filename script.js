@@ -551,22 +551,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
             try {
                 const accessToken = await getAccessToken();
-                gapi.client.setToken({ access_token: accessToken });
 
+                // Формируем multipart-запрос
                 const metadata = {
                     name: 'miramix_data.json',
                     mimeType: 'application/json'
                 };
+                const boundary = '-------314159265358979323846';
+                const delimiter = `\r\n--${boundary}\r\n`;
+                const closeDelimiter = `\r\n--${boundary}--`;
 
-                const response = await gapi.client.drive.files.create({
-                    resource: metadata,
-                    media: {
-                        mimeType: 'application/json',
-                        body: blob
+                let body = `${delimiter}Content-Type: application/json\r\n\r\n${JSON.stringify(metadata)}${delimiter}Content-Type: application/json\r\n\r\n${json}${closeDelimiter}`;
+
+                const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': `multipart/related; boundary=${boundary}`
                     },
-                    fields: 'id, name'
+                    body: body
                 });
 
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки файла: ' + response.statusText);
+                }
+
+                const result = await response.json();
+                console.log('Файл сохранён:', result);
                 alert('Данные успешно сохранены в Google Drive как miramix_data.json');
             } catch (error) {
                 console.error('Ошибка при сохранении в Google Drive:', error);
@@ -708,6 +719,11 @@ document.addEventListener('DOMContentLoaded', function() {
             let startX = 0;
             let scrollLeft = 0;
             let isDragging = false;
+            let velocity = 0;
+            let lastX = 0;
+            let lastTime = 0;
+            let animationFrameId = null;
+            let totalDistance = 0;
 
             list.addEventListener('mousedown', startDragging);
             list.addEventListener('mousemove', drag);
@@ -732,18 +748,52 @@ document.addEventListener('DOMContentLoaded', function() {
                 isDragging = true;
                 startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
                 scrollLeft = list.scrollLeft;
+                lastX = startX;
+                lastTime = performance.now();
+                totalDistance = 0;
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
             }
 
             function drag(e) {
                 if (!isDragging) return;
                 e.preventDefault();
                 const x = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+                const currentTime = performance.now();
                 const delta = x - startX;
                 list.scrollLeft = scrollLeft - delta;
+
+                const timeDiff = currentTime - lastTime;
+                if (timeDiff > 0) {
+                    velocity = (x - lastX) / timeDiff / 5; // Уменьшаем начальную скорость
+                }
+                lastX = x;
+                lastTime = currentTime;
             }
 
             function stopDragging() {
+                if (!isDragging) return;
                 isDragging = false;
+                if (Math.abs(velocity) > 0.1) {
+                    function animateScroll() {
+                        const currentTime = performance.now();
+                        const timeDiff = currentTime - lastTime;
+                        const scrollAmount = velocity * timeDiff * 5; // Минимальная инерция
+                        list.scrollLeft -= scrollAmount;
+                        totalDistance += Math.abs(scrollAmount);
+                        velocity *= 0.95; // Затухание
+
+                        if (totalDistance >= 200 || list.scrollLeft <= 0 || list.scrollLeft >= list.scrollWidth - list.clientWidth) {
+                            velocity = 0;
+                        }
+
+                        if (Math.abs(velocity) > 0.1 && totalDistance < 200) {
+                            lastTime = currentTime;
+                            animationFrameId = requestAnimationFrame(animateScroll);
+                        }
+                    }
+                    lastTime = performance.now();
+                    animationFrameId = requestAnimationFrame(animateScroll);
+                }
             }
         });
 
