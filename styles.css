@@ -76,7 +76,7 @@ button:hover {
     gap: 10px;
     width: 100%;
     padding: 10px 0;
-    -webkit-overflow-scrolling: touch; /* Инерция для мобильных */
+    -webkit-overflow-scrolling: touch; /* Плавная прокрутка на мобильных */
     touch-action: pan-x; /* Только горизонтальная прокрутка */
     user-select: none; /* Запрет выделения текста */
     scroll-behavior: smooth; /* Плавная прокрутка */
