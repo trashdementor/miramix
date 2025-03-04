@@ -708,11 +708,6 @@ document.addEventListener('DOMContentLoaded', function() {
             let startX = 0;
             let scrollLeft = 0;
             let isDragging = false;
-            let velocity = 0;
-            let lastX = 0;
-            let lastTime = 0;
-            let animationFrameId = null;
-            let totalDistance = 0; // Добавляем отслеживание дистанции
 
             list.addEventListener('mousedown', startDragging);
             list.addEventListener('mousemove', drag);
@@ -737,54 +732,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 isDragging = true;
                 startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
                 scrollLeft = list.scrollLeft;
-                lastX = startX;
-                lastTime = performance.now();
-                totalDistance = 0; // Сбрасываем дистанцию
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
             }
 
             function drag(e) {
                 if (!isDragging) return;
                 e.preventDefault();
                 const x = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-                const currentTime = performance.now();
                 const delta = x - startX;
                 list.scrollLeft = scrollLeft - delta;
-
-                const timeDiff = currentTime - lastTime;
-                if (timeDiff > 0) {
-                    velocity = (x - lastX) / timeDiff / 5; // Делим скорость на 5 для уменьшения
-                }
-                lastX = x;
-                lastTime = currentTime;
             }
 
             function stopDragging() {
-                if (!isDragging) return;
                 isDragging = false;
-                if (Math.abs(velocity) > 0.1) {
-                    function animateScroll() {
-                        const currentTime = performance.now();
-                        const timeDiff = currentTime - lastTime;
-                        const scrollAmount = velocity * timeDiff * 10; // Уменьшенный множитель
-                        list.scrollLeft -= scrollAmount;
-                        totalDistance += Math.abs(scrollAmount); // Суммируем дистанцию
-
-                        velocity *= 0.95; // Затухание
-
-                        // Ограничиваем максимальную дистанцию прокрутки до 300px
-                        if (totalDistance >= 300 || list.scrollLeft <= 0 || list.scrollLeft >= list.scrollWidth - list.clientWidth) {
-                            velocity = 0;
-                        }
-
-                        if (Math.abs(velocity) > 0.1 && totalDistance < 300) {
-                            lastTime = currentTime;
-                            animationFrameId = requestAnimationFrame(animateScroll);
-                        }
-                    }
-                    lastTime = performance.now();
-                    animationFrameId = requestAnimationFrame(animateScroll);
-                }
             }
         });
 
