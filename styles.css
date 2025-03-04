@@ -1,72 +1,236 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
 body {
     font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
-    color: #333;
+    background-color: #111216;
+    color: #FFFFFF;
+    margin: 0;
+    padding: 0;
 }
 
 header {
-    background-color: #007BFF;
-    color: white;
-    text-align: center;
-    padding: 1rem;
+    background-color: #111216;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between; /* Логотип и навигация слева, настройки справа */
+    align-items: center;
 }
 
-nav {
-    background-color: #333;
-    padding: 1rem;
+.left-header {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Отступ между логотипом и навигацией */
 }
 
-nav a {
-    color: white;
+.logo img {
+    height: 30px;
+    width: auto;
+}
+
+.main-nav ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+.main-nav a {
+    color: #f6efdd;
     text-decoration: none;
-    margin: 0 10px;
+    font-size: 18px;
 }
 
-nav a:hover {
-    text-decoration: underline;
+.settings-nav ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
 }
 
-.section {
+.settings-icon {
+    width: 30px;
+    height: 30px;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-content {
     display: none;
-    padding: 20px;
+    position: absolute;
+    background-color: #111216;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
 }
 
-.section.active {
+.dropdown-content a {
+    color: #FFFFFF;
+    padding: 12px 16px;
+    text-decoration: none;
     display: block;
 }
 
-form {
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+main {
+    padding: 20px;
+}
+
+.section {
+    display: block;
+}
+
+.search-menu {
+    margin-bottom: 20px;
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 10px;
-    max-width: 500px;
-    margin: 20px auto;
+    align-items: center;
 }
 
-input, select, textarea, button {
-    padding: 10px;
-    font-size: 16px;
+.search-menu label {
+    margin-right: 10px;
+    color: #FFFFFF;
 }
 
-button {
-    background-color: #007BFF;
-    color: white;
+.search-menu select, .search-menu input {
+    margin-right: 20px;
+    padding: 5px;
+    background-color: #434448;
+    color: #FFFFFF;
     border: none;
+    border-radius: 4px;
+}
+
+.search-menu button {
+    padding: 5px 10px;
+    background-color: inherit;
+    color: #1A1A1D;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
 }
 
-button:hover {
-    background-color: #0056b3;
+.content-list {
+    padding: 10px;
+    background-color: #434448;
+    margin-bottom: 10px;
+    border-radius: 4px;
 }
 
-.content-list {
+.content-list div {
+    padding: 10px;
+    background-color: #434448;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.content-list img {
+    border-radius: 4px;
+}
+
+.content-list button {
+    margin-left: 10px;
+    padding: 5px 10px;
+    background-color: inherit;
+    color: #1A1A1D;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+form label {
+    display: block;
+    margin-top: 10px;
+    color: #FFFFFF;
+}
+
+form input, form select, form textarea {
+    width: 100%;
+    max-width: 300px;
+    padding: 5px;
+    margin-top: 5px;
+    background-color: #434448;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+}
+
+form textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+form button {
     margin-top: 20px;
+    padding: 5px 10px;
+    background-color: inherit;
+    color: #1A1A1D;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 1000;
+    padding: 10px;
+    overflow-y: hidden;
+}
+
+.modal-content {
+    background-color: #434448;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+.close {
+    float: right;
+    font-size: 24px;
+    cursor: pointer;
+    color: #FFFFFF;
+}
+
+.top-section {
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: #111216;
+}
+
+.top-section h3 {
+    color: #f6efdd;
+}
+
+.top-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
 }
 
 .content-list.horizontal {
@@ -75,92 +239,310 @@ button:hover {
     overflow-x: auto;
     gap: 10px;
     width: 100%;
-    padding: 10px 0;
-    -webkit-overflow-scrolling: touch; /* Плавная прокрутка на мобильных */
-    touch-action: pan-x; /* Только горизонтальная прокрутка */
-    user-select: none; /* Запрет выделения текста */
-    scroll-behavior: smooth; /* Плавная прокрутка */
+    padding: 0;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch; /* Плавная прокрутка на сенсорных устройствах */
+    touch-action: pan-x; /* Улучшает управление прокруткой пальцем */
 }
 
 .content-list.horizontal::-webkit-scrollbar {
-    display: none; /* Скрыть полосу прокрутки */
+    display: none;
 }
 
-.content-list.horizontal > div {
+.content-list.horizontal div {
     flex: 0 0 auto;
-    background-color: white;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    opacity: 0;
-    transition: opacity 0.5s ease-in-out;
-}
-
-.content-list.horizontal > div.visible {
-    opacity: 1;
-}
-
-.scroll-controls {
+    width: 200px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 10px 0;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px;
+    background-color: #434448;
+    border-radius: 4px;
+    min-width: 0;
+    opacity: 0; /* Начальное состояние */
+    transform: translateY(20px); /* Начальное смещение */
+    transition: opacity 0.5s ease, transform 0.5s ease; /* Плавный переход */
 }
 
-.scroll-btn {
-    background-color: #007BFF;
-    color: white;
-    border: none;
+.content-list.horizontal div.visible {
+    opacity: 1; /* Конечное состояние */
+    transform: translateY(0); /* Возвращаем на место */
+}
+
+.content-list.horizontal img {
+    width: 100px;
+    height: 150px;
+    border-radius: 4px;
+}
+
+.prev-btn, .next-btn {
     padding: 5px 10px;
+    background-color: #e7d5a6;
+    color: #1A1A1D;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
-}
-
-.scroll-btn:hover {
-    background-color: #0056b3;
 }
 
 .scroll-indicator {
     width: 100%;
-    height: 5px;
-    background-color: #ddd;
+    height: 4px;
+    background-color: #C5C6C7;
+    border-radius: 2px;
+    margin-top: 5px;
     position: relative;
 }
 
 .scroll-indicator-bar {
     height: 100%;
-    background-color: #007BFF;
+    background-color: #e7d5a6;
+    border-radius: 2px;
     position: absolute;
-    transition: all 0.3s ease;
-}
-
-#edit-modal {
-    display: none;
-    position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
+    transition: width 0.2s ease, left 0.2s ease;
 }
 
-.modal-content {
-    background-color: white;
-    padding: 20px;
-    margin: 50px auto;
-    width: 90%;
-    max-width: 500px;
-    border-radius: 5px;
-    position: relative;
+/* Уникальные цвета для разделов */
+#films {
+    background-color: #111216;
+}
+#films h2 {
+    color: #ffadad;
+}
+#films .search-menu button, #films .content-list button {
+    background-color: #de9696;
 }
 
-#close-modal {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 20px;
-    cursor: pointer;
+#cartoons {
+    background-color: #111216;
+}
+#cartoons h2 {
+    color: #ffadad;
+}
+#cartoons .search-menu button, #cartoons .content-list button {
+    background-color: #de9696;
 }
 
-.modal-open {
-    overflow: hidden;
+#series {
+    background-color: #111216;
+}
+#series h2 {
+    color: #ffd6a5;
+}
+#series .search-menu button, #series .content-list button {
+    background-color: #deba8f;
+}
+
+#cartoon-series {
+    background-color: #111216;
+}
+#cartoon-series h2 {
+    color: #ffd6a5;
+}
+#cartoon-series .search-menu button, #cartoon-series .content-list button {
+    background-color: #deba8f;
+}
+
+#books {
+    background-color: #111216;
+}
+#books h2 {
+    color: #fdffb6;
+}
+#books .search-menu button, #books .content-list button {
+    background-color: #dcde9e;
+}
+
+#music {
+    background-color: #111216;
+}
+#music h2 {
+    color: #caffbf;
+}
+#music .search-menu button, #music .content-list button {
+    background-color: #afdea6;
+}
+
+#games {
+    background-color: #111216;
+}
+#games h2 {
+    color: #96e8ff;
+}
+#games .search-menu button, #games .content-list button {
+    background-color: #82cade;
+}
+
+#programs {
+    background-color: #111216;
+}
+#programs h2 {
+    color: #96e8ff;
+}
+#programs .search-menu button, #programs .content-list button {
+    background-color: #82cade;
+}
+
+#recipes {
+    background-color: #111216;
+}
+#recipes h2 {
+    color: #a0c4ff;
+}
+#recipes .search-menu button, #recipes .content-list button {
+    background-color: #8baade;
+}
+
+#sites {
+    background-color: #111216;
+}
+#sites h2 {
+    color: #bdb2ff;
+}
+#sites .search-menu button, #sites .content-list button {
+    background-color: #a49ade;
+}
+
+#catalog, #recommendations, #settings {
+    background-color: #111216;
+}
+#settings h2, #settings h3 {
+    color: #f6efdd;
+}
+#settings form button {
+    background-color: #e7d5a6;
+}
+.modal-content form button {
+    background-color: #e7d5a6;
+}
+
+/* Адаптивный дизайн */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .left-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .main-nav ul {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    .main-nav a {
+        font-size: 16px;
+    }
+
+    .settings-nav ul {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .dropdown-content {
+        position: static;
+        box-shadow: none;
+        width: 100%;
+    }
+
+    main {
+        padding: 10px;
+    }
+
+    .search-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .search-menu label {
+        margin-right: 0;
+    }
+
+    .search-menu select, .search-menu input {
+        margin-right: 0;
+        width: 100%;
+    }
+
+    .content-list div {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .content-list img {
+        width: 80px;
+        height: 120px;
+    }
+
+    .content-list button {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    form input, form select, form textarea {
+        max-width: 100%;
+    }
+
+    .modal-content {
+        width: 90%;
+        padding: 15px;
+        max-height: 70vh;
+    }
+
+    .content-list.horizontal {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* Повторяем для надёжности */
+        touch-action: pan-x;
+    }
+
+    .content-list.horizontal div {
+        width: 150px;
+        min-width: 150px; /* Фиксируем ширину для корректной прокрутки */
+    }
+
+    .content-list.horizontal img {
+        width: 80px;
+        height: 120px;
+    }
+
+    .prev-btn, .next-btn {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo img {
+        height: 15px;
+    }
+
+    .main-nav a {
+        font-size: 14px;
+    }
+
+    .content-list img {
+        width: 60px;
+        height: 90px;
+    }
+
+    .modal-content {
+        max-height: 60vh;
+    }
+
+    .content-list.horizontal div {
+        width: 120px;
+        min-width: 120px; /* Фиксируем ширину */
+    }
+
+    .content-list.horizontal img {
+        width: 60px;
+        height: 90px;
+    }
 }
