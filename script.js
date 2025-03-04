@@ -571,6 +571,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 console.log('Используемый токен для сохранения:', accessToken);
 
+                // Устанавливаем токен в gapi.client
+                gapi.client.setToken({ access_token: accessToken });
+
                 const metadata = {
                     name: 'miramix_data.json',
                     mimeType: 'application/json'
@@ -709,7 +712,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderTopList(listId, items, limit) {
         const list = document.getElementById(listId);
         if (!list) {
-            console.error(`Элемент с ID ${listId} не найден`);
+            console.error(`Элемент с ID drei у ${listId} не найден`);
             return;
         }
 
@@ -745,8 +748,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''}`;
                 list.appendChild(div);
                 setTimeout(() => {
-                    div.style.animationDelay = `${index * 0.1}s`;
-                }, 0);
+                    div.classList.add('visible');
+                }, index * 100); // Задержка 100мс между элементами для анимации
             });
         }
 
@@ -765,7 +768,6 @@ document.addEventListener('DOMContentLoaded', function() {
             let scrollLeft = 0;
             let isDragging = false;
 
-            // Перетаскивание для всех устройств
             list.addEventListener('mousedown', startDragging);
             list.addEventListener('mousemove', drag);
             list.addEventListener('mouseup', stopDragging);
@@ -798,7 +800,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Кнопки только для не-мобильных устройств
         if (!isMobile) {
             prevButtons.forEach(btn => {
                 btn.addEventListener('click', function() {
