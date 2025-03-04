@@ -551,33 +551,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
             try {
                 const accessToken = await getAccessToken();
+                gapi.client.setToken({ access_token: accessToken });
 
-                // Формируем multipart-запрос
-                const metadata = {
+                const fileMetadata = {
                     name: 'miramix_data.json',
                     mimeType: 'application/json'
                 };
-                const boundary = '-------314159265358979323846';
-                const delimiter = `\r\n--${boundary}\r\n`;
-                const closeDelimiter = `\r\n--${boundary}--`;
 
-                let body = `${delimiter}Content-Type: application/json\r\n\r\n${JSON.stringify(metadata)}${delimiter}Content-Type: application/json\r\n\r\n${json}${closeDelimiter}`;
+                const form = new FormData();
+                form.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
+                form.append('file', blob);
 
                 const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': `multipart/related; boundary=${boundary}`
+                        'Authorization': `Bearer ${accessToken}`
                     },
-                    body: body
+                    body: form
                 });
 
                 if (!response.ok) {
-                    throw new Error('Ошибка загрузки файла: ' + response.statusText);
+                    const errorText = await response.text();
+                    throw new Error(`Ошибка загрузки файла: ${response.status} - ${errorText}`);
                 }
 
                 const result = await response.json();
-                console.log('Файл сохранён:', result);
+                console.log('Файл успешно сохранён:', result);
                 alert('Данные успешно сохранены в Google Drive как miramix_data.json');
             } catch (error) {
                 console.error('Ошибка при сохранении в Google Drive:', error);
@@ -773,20 +772,20 @@ document.addEventListener('DOMContentLoaded', function() {
             function stopDragging() {
                 if (!isDragging) return;
                 isDragging = false;
-                if (Math.abs(velocity) > 0.1) {
+                if (Math.abs(velocity) > 0.01) { // Уменьшаем порог остановки
                     function animateScroll() {
                         const currentTime = performance.now();
                         const timeDiff = currentTime - lastTime;
                         const scrollAmount = velocity * timeDiff * 5; // Минимальная инерция
                         list.scrollLeft -= scrollAmount;
                         totalDistance += Math.abs(scrollAmount);
-                        velocity *= 0.95; // Затухание
+                        velocity *= 0.9; // Более плавное затухание
 
                         if (totalDistance >= 200 || list.scrollLeft <= 0 || list.scrollLeft >= list.scrollWidth - list.clientWidth) {
                             velocity = 0;
                         }
 
-                        if (Math.abs(velocity) > 0.1 && totalDistance < 200) {
+                        if (Math.abs(velocity) > 0.01 && totalDistance < 200) {
                             lastTime = currentTime;
                             animationFrameId = requestAnimationFrame(animateScroll);
                         }
