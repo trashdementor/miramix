@@ -242,6 +242,8 @@ body.modal-open {
     padding: 0;
     -ms-overflow-style: none;
     scrollbar-width: none;
+    -webkit-overflow-scrolling: touch; /* Добавлено для плавной прокрутки на сенсорных устройствах */
+    touch-action: pan-x; /* Улучшает управление прокруткой пальцем */
 }
 
 .content-list.horizontal::-webkit-scrollbar {
@@ -260,6 +262,7 @@ body.modal-open {
     opacity: 0;
     transform: translateY(20px);
     animation: fadeInUp 0.5s ease forwards;
+    min-width: 0; /* Предотвращает переполнение контейнера */
 }
 
 @keyframes fadeInUp {
@@ -496,8 +499,15 @@ body.modal-open {
         max-height: 70vh;
     }
 
+    .content-list.horizontal {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; /* Повторяем для надёжности */
+        touch-action: pan-x;
+    }
+
     .content-list.horizontal div {
         width: 150px;
+        min-width: 150px; /* Фиксируем ширину для корректной прокрутки */
     }
 
     .content-list.horizontal img {
@@ -530,6 +540,7 @@ body.modal-open {
 
     .content-list.horizontal div {
         width: 120px;
+        min-width: 120px; /* Фиксируем ширину */
     }
 
     .content-list.horizontal img {
