@@ -44,12 +44,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const objectStore = transaction.objectStore('auth');
             const request = objectStore.get('googleAccessToken');
             request.onsuccess = function(event) {
-                const token = event.target.result ? event.target.result.value : null;
-                console.log('Извлечён токен из базы:', token);
-                resolve(token);
+                resolve(event.target.result ? event.target.result.value : null);
             };
             request.onerror = function(event) {
-                console.error('Ошибка получения токена из базы:', event.target.error);
+                console.error('Ошибка получения токена:', event.target.error);
                 resolve(null);
             };
         });
@@ -61,11 +59,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const objectStore = transaction.objectStore('auth');
             const request = objectStore.put({ key: 'googleAccessToken', value: token });
             request.onsuccess = function() {
-                console.log('Токен сохранён в базу:', token);
                 resolve();
             };
             request.onerror = function(event) {
-                console.error('Ошибка сохранения токена в базу:', event.target.error);
+                console.error('Ошибка сохранения токена:', event.target.error);
                 resolve();
             };
         });
@@ -73,43 +70,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function initGoogleDrive() {
         gapi.load('client', async () => {
-            try {
-                await gapi.client.init({
-                    apiKey: API_KEY,
-                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-                });
-                console.log('Google Drive API инициализирован');
-
-                tokenClient = google.accounts.oauth2.initTokenClient({
-                    client_id: CLIENT_ID,
-                    scope: SCOPES,
-                    callback: (tokenResponse) => {
-                        if (tokenResponse && tokenResponse.access_token) {
-                            console.log('Получен новый токен:', tokenResponse.access_token);
-                            saveTokenToDB(tokenResponse.access_token);
-                            document.getElementById('auth-google-btn').style.display = 'none';
-                            document.getElementById('save-to-drive-btn').style.display = 'inline';
-                            document.getElementById('load-from-drive-btn').style.display = 'inline';
-                        } else {
-                            console.error('Ошибка авторизации:', tokenResponse);
-                        }
+            await gapi.client.init({
+                apiKey: API_KEY,
+                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+            });
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: (tokenResponse) => {
+                    if (tokenResponse && tokenResponse.access_token) {
+                        saveTokenToDB(tokenResponse.access_token);
+                        document.getElementById('auth-google-btn').style.display = 'none';
+                        document.getElementById('save-to-drive-btn').style.display = 'inline';
+                        document.getElementById('load-from-drive-btn').style.display = 'inline';
                     }
-                });
-
-                const token = await getTokenFromDB();
-                if (token && await isTokenValid(token)) {
-                    console.log('Использован сохранённый токен при инициализации:', token);
-                    document.getElementById('auth-google-btn').style.display = 'none';
-                    document.getElementById('save-to-drive-btn').style.display = 'inline';
-                    document.getElementById('load-from-drive-btn').style.display = 'inline';
-                } else {
-                    console.log('Токен отсутствует или недействителен, требуется авторизация');
-                    document.getElementById('auth-google-btn').addEventListener('click', () => {
-                        tokenClient.requestAccessToken();
-                    });
                 }
-            } catch (error) {
-                console.error('Ошибка инициализации Google API:', error);
+            });
+
+            const token = await getTokenFromDB();
+            if (token && await isTokenValid(token)) {
+                document.getElementById('auth-google-btn').style.display = 'none';
+                document.getElementById('save-to-drive-btn').style.display = 'inline';
+                document.getElementById('load-from-drive-btn').style.display = 'inline';
+            } else {
+                document.getElementById('auth-google-btn').addEventListener('click', () => {
+                    tokenClient.requestAccessToken();
+                });
             }
         });
     }
@@ -117,19 +103,10 @@ document.addEventListener('DOMContentLoaded', function() {
     async function isTokenValid(token) {
         try {
             const response = await fetch('https://www.googleapis.com/drive/v3/about?fields=user', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-            const isValid = response.ok;
-            console.log('Проверка токена:', token, 'Валиден:', isValid, 'Статус:', response.status);
-            if (!isValid) {
-                const errorText = await response.text();
-                console.error('Ошибка проверки токена:', errorText);
-            }
-            return isValid;
+            return response.ok;
         } catch (error) {
-            console.error('Ошибка при проверке токена:', error);
             return false;
         }
     }
@@ -137,20 +114,15 @@ document.addEventListener('DOMContentLoaded', function() {
     async function getAccessToken() {
         let token = await getTokenFromDB();
         if (token && await isTokenValid(token)) {
-            console.log('Используется существующий токен:', token);
             return token;
         }
-
-        console.log('Токен недействителен или отсутствует, запрашивается новый');
         return new Promise((resolve, reject) => {
             tokenClient.callback = (tokenResponse) => {
                 if (tokenResponse && tokenResponse.access_token) {
-                    console.log('Получен новый токен:', tokenResponse.access_token);
                     saveTokenToDB(tokenResponse.access_token);
                     resolve(tokenResponse.access_token);
                 } else {
-                    console.error('Ошибка получения токена:', tokenResponse);
-                    reject(new Error('Не удалось получить токен доступа'));
+                    reject(new Error('Не удалось получить токен'));
                 }
             };
             tokenClient.requestAccessToken();
@@ -175,10 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('add-resource-form').addEventListener('submit', async function(e) {
         e.preventDefault();
-        if (!db) {
-            alert('База данных ещё не готова. Попробуйте позже.');
-            return;
-        }
+        if (!db) return;
 
         const type = document.getElementById('resource-type').value;
         const title = document.getElementById('resource-title').value;
@@ -194,26 +163,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let imageUrl = '';
         if (fileInput.files.length > 0) {
-            try {
-                const formData = new FormData();
-                formData.append('image', fileInput.files[0]);
-                const response = await fetch('https://api.imgbb.com/1/upload?key=0599b64b7b92fc354f0c0b98c3b553ae', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                if (data.success) {
-                    imageUrl = data.data.url;
-                    console.log('Image URL:', imageUrl);
-                    alert('Изображение загружено');
-                } else {
-                    console.error('Ошибка ImgBB:', data);
-                    alert('Ошибка загрузки изображения: ' + (data.error?.message || 'Неизвестная ошибка'));
-                    return;
-                }
-            } catch (error) {
-                console.error('Ошибка при загрузке:', error.message);
-                alert('Ошибка загрузки изображения: ' + error.message);
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+            const response = await fetch('https://api.imgbb.com/1/upload?key=0599b64b7b92fc354f0c0b98c3b553ae', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            if (data.success) {
+                imageUrl = data.data.url;
+            } else {
+                alert('Ошибка загрузки изображения');
                 return;
             }
         }
@@ -221,17 +181,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const transaction = db.transaction(['content'], 'readwrite');
         const objectStore = transaction.objectStore('content');
         const newItem = {
-            type: type,
-            title: title,
-            genre: genre,
-            year: year,
-            country: country,
-            author: author,
-            description: description,
-            status: status,
+            type, title, genre, year, country, author, description, status,
             characteristics: characteristics ? [characteristics] : [],
-            rating: rating,
-            image: imageUrl
+            rating, image: imageUrl
         };
 
         const saveRequest = objectStore.add(newItem);
@@ -240,10 +192,6 @@ document.addEventListener('DOMContentLoaded', function() {
             e.target.reset();
             loadTopContent();
             setupSearch(type);
-        };
-        saveRequest.onerror = function(event) {
-            console.error('Ошибка при добавлении:', event.target.error);
-            alert('Ошибка при добавлении ресурса');
         };
     });
 
@@ -276,22 +224,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const contentList = document.getElementById(`${prefix}-content-list`);
 
         if (!statusEl || !titleEl || !genreEl || !yearEl || !countryEl || !authorEl || !descriptionEl || !charEl || !ratingEl || !searchBtn || !contentList) {
-            console.error(`Один из элементов для ${type} не найден`);
             return;
         }
 
         function performSearch() {
             if (!db) return;
-            const status = statusEl.value;
-            const title = titleEl.value.toLowerCase();
-            const genre = genreEl.value.toLowerCase();
-            const year = yearEl.value;
-            const country = countryEl.value.toLowerCase();
-            const author = authorEl.value.toLowerCase();
-            const description = descriptionEl.value.toLowerCase();
-            const characteristics = charEl.value ? [charEl.value] : [];
-            const rating = ratingEl.value;
-
             const transaction = db.transaction(['content'], 'readonly');
             const objectStore = transaction.objectStore('content');
             const index = objectStore.index('type');
@@ -299,18 +236,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
             request.onsuccess = function(event) {
                 let results = event.target.result;
+                const filters = {
+                    status: statusEl.value,
+                    title: titleEl.value.toLowerCase(),
+                    genre: genreEl.value.toLowerCase(),
+                    year: yearEl.value,
+                    country: countryEl.value.toLowerCase(),
+                    author: authorEl.value.toLowerCase(),
+                    description: descriptionEl.value.toLowerCase(),
+                    characteristics: charEl.value ? [charEl.value] : [],
+                    rating: ratingEl.value
+                };
 
-                if (status) results = results.filter(item => item.status === status);
-                if (title) results = results.filter(item => item.title.toLowerCase().includes(title));
-                if (genre) results = results.filter(item => item.genre && item.genre.toLowerCase().includes(genre));
-                if (year) results = results.filter(item => item.year && item.year.toString() === year);
-                if (country) results = results.filter(item => item.country && item.country.toLowerCase().includes(country));
-                if (author) results = results.filter(item => item.author && item.author.toLowerCase().includes(author));
-                if (description) results = results.filter(item => item.description && item.description.toLowerCase().includes(description));
-                if (characteristics.length > 0) {
-                    results = results.filter(item => characteristics.every(char => item.characteristics.includes(char)));
-                }
-                if (rating) results = results.filter(item => item.rating === rating);
+                if (filters.status) results = results.filter(item => item.status === filters.status);
+                if (filters.title) results = results.filter(item => item.title.toLowerCase().includes(filters.title));
+                if (filters.genre) results = results.filter(item => item.genre && item.genre.toLowerCase().includes(filters.genre));
+                if (filters.year) results = results.filter(item => item.year && item.year.toString() === filters.year);
+                if (filters.country) results = results.filter(item => item.country && item.country.toLowerCase().includes(filters.country));
+                if (filters.author) results = results.filter(item => item.author && item.author.toLowerCase().includes(filters.author));
+                if (filters.description) results = results.filter(item => item.description && item.description.toLowerCase().includes(filters.description));
+                if (filters.characteristics.length) results = results.filter(item => filters.characteristics.every(c => item.characteristics.includes(c)));
+                if (filters.rating) results = results.filter(item => item.rating === filters.rating);
 
                 contentList.innerHTML = '';
                 if (results.length === 0) {
@@ -319,13 +265,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     results.forEach(item => {
                         const div = document.createElement('div');
                         const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;" loading="lazy">` : 'Нет изображения';
-                        const genreText = item.genre ? `Жанр: ${item.genre}` : '';
-                        const yearText = item.year ? `Год: ${item.year}` : '';
-                        const countryText = item.country ? `Страна: ${item.country}` : '';
-                        const authorText = item.author ? `${type === 'books' || type === 'music' ? 'Автор' : 'Разработчик'}: ${item.author}` : '';
-                        const descText = item.description ? `Описание: ${item.description}` : '';
-                        div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} - Характеристика: ${item.characteristics.join(', ') || 'Нет'} 
-                            ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''} 
+                        div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating}<br>
+                            ${item.genre ? `Жанр: ${item.genre}<br>` : ''}
+                            ${item.year ? `Год: ${item.year}<br>` : ''}
+                            ${item.country ? `Страна: ${item.country}<br>` : ''}
+                            ${item.author ? `${type === 'books' || type === 'music' ? 'Автор' : 'Разработчик'}: ${item.author}<br>` : ''}
+                            ${item.description ? `Описание: ${item.description}<br>` : ''}
+                            Характеристика: ${item.characteristics.join(', ') || 'Нет'}
                             <button onclick="deleteItem(${item.id}, '${type}')">Удалить</button>
                             <button onclick="editItem(${item.id}, '${type}')">Изменить</button>`;
                         contentList.appendChild(div);
@@ -350,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     };
 
-    window.editItem = async function(id, type) {
+    window.editItem = function(id, type) {
         if (!db) return;
         const transaction = db.transaction(['content'], 'readonly');
         const objectStore = transaction.objectStore('content');
@@ -358,8 +304,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         request.onsuccess = function(event) {
             const item = event.target.result;
-            if (!item) return;
-
             document.getElementById('edit-id').value = item.id;
             document.getElementById('edit-type').value = item.type;
             document.getElementById('edit-title').value = item.title;
@@ -372,8 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit-characteristics').value = item.characteristics[0] || '';
             document.getElementById('edit-rating').value = item.rating;
 
-            const modal = document.getElementById('edit-modal');
-            modal.style.display = 'block';
+            document.getElementById('edit-modal').style.display = 'block';
             document.body.classList.add('modal-open');
         };
     };
@@ -402,26 +345,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let imageUrl = '';
         if (fileInput.files.length > 0) {
-            try {
-                const formData = new FormData();
-                formData.append('image', fileInput.files[0]);
-                const response = await fetch('https://api.imgbb.com/1/upload?key=0599b64b7b92fc354f0c0b98c3b553ae', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                if (data.success) {
-                    imageUrl = data.data.url;
-                    console.log('Image URL:', imageUrl);
-                    alert('Изображение загружено');
-                } else {
-                    console.error('Ошибка ImgBB:', data);
-                    alert('Ошибка загрузки изображения');
-                    return;
-                }
-            } catch (error) {
-                console.error('Ошибка при загрузке:', error.message);
-                alert('Ошибка загрузки изображения: ' + error.message);
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+            const response = await fetch('https://api.imgbb.com/1/upload?key=0599b64b7b92fc354f0c0b98c3b553ae', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            if (data.success) {
+                imageUrl = data.data.url;
+            } else {
+                alert('Ошибка загрузки изображения');
                 return;
             }
         }
@@ -432,21 +366,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         requestGet.onsuccess = function(event) {
             const item = event.target.result;
-            if (!item) return;
-
             const updatedItem = {
-                id: id,
-                type: type,
-                title: title,
-                genre: genre,
-                year: year,
-                country: country,
-                author: author,
-                description: description,
-                status: status,
+                id, type, title, genre, year, country, author, description, status,
                 characteristics: characteristics ? [characteristics] : [],
-                rating: rating,
-                image: imageUrl || item.image
+                rating, image: imageUrl || item.image
             };
 
             const requestUpdate = objectStore.put(updatedItem);
@@ -457,19 +380,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 loadTopContent();
                 setupSearch(type);
             };
-            requestUpdate.onerror = function(event) {
-                console.error('Ошибка при обновлении:', event.target.error);
-                alert('Ошибка при обновлении ресурса');
-            };
         };
     });
 
     document.getElementById('export-btn').addEventListener('click', function() {
-        if (!db) {
-            alert('База данных ещё не готова.');
-            return;
-        }
-
+        if (!db) return;
         const transaction = db.transaction(['content'], 'readonly');
         const objectStore = transaction.objectStore('content');
         const request = objectStore.getAll();
@@ -482,11 +397,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const a = document.createElement('a');
             a.href = url;
             a.download = 'miramix_data.json';
-            document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            alert('Данные экспортированы в файл miramix_data.json');
         };
     });
 
@@ -500,224 +412,143 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const reader = new FileReader();
         reader.onload = function(event) {
-            try {
-                const data = JSON.parse(event.target.result);
-                if (!Array.isArray(data)) {
-                    alert('Неверный формат файла. Ожидается массив данных.');
-                    return;
-                }
-
-                const transaction = db.transaction(['content'], 'readwrite');
-                const objectStore = transaction.objectStore('content');
-
-                objectStore.clear().onsuccess = function() {
-                    data.forEach(item => {
-                        objectStore.add(item);
-                    });
-
-                    transaction.oncomplete = function() {
-                        alert('Данные успешно импортированы');
-                        loadTopContent();
-                        const currentSection = document.querySelector('.section:not([style*="display: none"])').id;
-                        if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(currentSection)) {
-                            setupSearch(currentSection);
-                        }
-                    };
-                    transaction.onerror = function(event) {
-                        console.error('Ошибка при импорте:', event.target.error);
-                        alert('Ошибка при импорте данных');
-                    };
-                };
-            } catch (error) {
-                console.error('Ошибка парсинга JSON:', error);
-                alert('Ошибка при чтении файла: ' + error.message);
+            const data = JSON.parse(event.target.result);
+            if (!Array.isArray(data)) {
+                alert('Неверный формат файла');
+                return;
             }
+
+            const transaction = db.transaction(['content'], 'readwrite');
+            const objectStore = transaction.objectStore('content');
+            objectStore.clear().onsuccess = function() {
+                data.forEach(item => objectStore.add(item));
+                transaction.oncomplete = function() {
+                    alert('Данные импортированы');
+                    loadTopContent();
+                    const currentSection = document.querySelector('.section:not([style*="display: none"])').id;
+                    if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(currentSection)) {
+                        setupSearch(currentSection);
+                    }
+                };
+            };
         };
         reader.readAsText(file);
     });
 
     document.getElementById('save-to-drive-btn').addEventListener('click', async function() {
-        if (!db) {
-            alert('База данных ещё не готова.');
-            console.error('База данных не инициализирована');
-            return;
-        }
-
-        console.log('Начало сохранения в Google Drive');
+        if (!db) return;
         const transaction = db.transaction(['content'], 'readonly');
         const objectStore = transaction.objectStore('content');
         const request = objectStore.getAll();
 
         request.onsuccess = async function(event) {
-            console.log('Запрос на получение данных выполнен');
             const data = event.target.result;
-            console.log('Данные из базы:', data);
-
-            if (!data || !Array.isArray(data) || data.length === 0) {
-                alert('Нет данных для сохранения или данные некорректны.');
-                console.error('Данные отсутствуют или не являются массивом:', data);
-                return;
-            }
-
             const json = JSON.stringify(data, null, 2);
-            console.log('JSON для сохранения:', json);
             const blob = new Blob([json], { type: 'application/json' });
-            console.log('Blob создан, размер:', blob.size);
 
-            try {
-                const accessToken = await getAccessToken();
-                if (!accessToken) {
-                    throw new Error('Токен не получен');
-                }
-                console.log('Используемый токен для сохранения:', accessToken);
+            const accessToken = await getAccessToken();
+            gapi.client.setToken({ access_token: accessToken });
 
-                gapi.client.setToken({ access_token: accessToken });
-
-                const metadata = {
-                    name: 'miramix_data.json',
-                    mimeType: 'application/json'
-                };
-
-                const response = await gapi.client.drive.files.create({
-                    resource: metadata,
-                    media: {
-                        mimeType: 'application/json',
-                        body: blob
-                    },
-                    fields: 'id, name'
-                });
-
-                console.log('Файл сохранён в Drive:', response.result);
-                alert('Данные успешно сохранены в Google Drive как miramix_data.json');
-            } catch (error) {
-                console.error('Ошибка при сохранении в Google Drive:', error);
-                alert('Ошибка при сохранении: ' + error.message);
-            }
-        };
-
-        request.onerror = function(event) {
-            console.error('Ошибка получения данных из базы:', event.target.error);
-            alert('Ошибка получения данных из базы');
+            const metadata = { name: 'miramix_data.json', mimeType: 'application/json' };
+            await gapi.client.drive.files.create({
+                resource: metadata,
+                media: { mimeType: 'application/json', body: blob },
+                fields: 'id'
+            });
+            alert('Данные сохранены в Google Drive');
         };
     });
 
     document.getElementById('load-from-drive-btn').addEventListener('click', async function() {
-        try {
-            const accessToken = await getAccessToken();
-            if (!accessToken) {
-                throw new Error('Токен не получен');
-            }
-            console.log('Используемый токен для загрузки:', accessToken);
-
-            const listResponse = await fetch('https://www.googleapis.com/drive/v3/files?q=name%3D%27miramix_data.json%27&fields=files(id,name,createdTime)&orderBy=createdTime%20desc', {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
+        const accessToken = await getAccessToken();
+        const listResponse = await fetch('https://www.googleapis.com/drive/v3/files?q=name%3D%27miramix_data.json%27&fields=files(id)&orderBy=createdTime%20desc', {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const listData = await listResponse.json();
+        if (listData.files && listData.files.length > 0) {
+            const fileId = listData.files[0].id;
+            const fileResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+                headers: { 'Authorization': `Bearer ${accessToken}` }
             });
+            const data = await fileResponse.json();
 
-            if (!listResponse.ok) {
-                const errorText = await listResponse.text();
-                throw new Error(`Ошибка поиска файла: ${listResponse.status} - ${errorText}`);
-            }
-
-            const listData = await listResponse.json();
-            const files = listData.files;
-            if (files && files.length > 0) {
-                const fileId = files[0].id;
-                const fileResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`
+            const transaction = db.transaction(['content'], 'readwrite');
+            const objectStore = transaction.objectStore('content');
+            objectStore.clear().onsuccess = function() {
+                data.forEach(item => objectStore.add(item));
+                transaction.oncomplete = function() {
+                    alert('Данные загружены из Google Drive');
+                    loadTopContent();
+                    const currentSection = document.querySelector('.section:not([style*="display: none"])').id;
+                    if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(currentSection)) {
+                        setupSearch(currentSection);
                     }
-                });
-
-                if (!fileResponse.ok) {
-                    const errorText = await fileResponse.text();
-                    throw new Error(`Ошибка загрузки файла: ${fileResponse.status} - ${errorText}`);
-                }
-
-                const data = await fileResponse.json();
-                if (!Array.isArray(data)) {
-                    alert('Неверный формат файла из Google Drive');
-                    return;
-                }
-
-                const transaction = db.transaction(['content'], 'readwrite');
-                const objectStore = transaction.objectStore('content');
-
-                objectStore.clear().onsuccess = function() {
-                    data.forEach(item => {
-                        objectStore.add(item);
-                    });
-
-                    transaction.oncomplete = function() {
-                        alert('Данные успешно загружены из Google Drive');
-                        loadTopContent();
-                        const currentSection = document.querySelector('.section:not([style*="display: none"])').id;
-                        if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(currentSection)) {
-                            setupSearch(currentSection);
-                        }
-                    };
-                    transaction.onerror = function(event) {
-                        console.error('Ошибка при импорте из Drive:', event.target.error);
-                        alert('Ошибка при импорте данных из Google Drive');
-                    };
                 };
-            } else {
-                alert('Файл miramix_data.json не найден в Google Drive');
-                console.log('Список файлов:', listData);
-            }
-        } catch (error) {
-            console.error('Ошибка загрузки из Drive:', error);
-            alert('Ошибка загрузки из Google Drive: ' + error.message);
+            };
+        } else {
+            alert('Файл не найден в Google Drive');
         }
     });
 
-    function setupNavigation() {
-    const topLists = document.querySelectorAll('.content-list.horizontal');
-    const prevButtons = document.querySelectorAll('.prev-btn');
-    const nextButtons = document.querySelectorAll('.next-btn');
-    const scrollStep = 200;
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    function loadTopContent() {
+        if (!db) return;
+        const types = [
+            { type: 'films', limit: 15, listId: 'top-films-list' },
+            { type: 'cartoons', limit: 15, listId: 'top-cartoons-list' },
+            { type: 'series', limit: 15, listId: 'top-series-list' },
+            { type: 'cartoon-series', limit: 15, listId: 'top-cartoon-series-list' },
+            { type: 'books', limit: 10, listId: 'top-books-list' },
+            { type: 'music', limit: 10, listId: 'top-music-list' },
+            { type: 'games', limit: 10, listId: 'top-games-list' },
+            { type: 'programs', limit: 10, listId: 'top-programs-list' },
+            { type: 'recipes', limit: 10, listId: 'top-recipes-list' },
+            { type: 'sites', limit: 10, listId: 'top-sites-list' }
+        ];
 
-    topLists.forEach(list => {
-        list.addEventListener('scroll', () => updateScrollIndicator(list));
+        types.forEach(({ type, limit, listId }) => {
+            const transaction = db.transaction(['content'], 'readonly');
+            const objectStore = transaction.objectStore('content');
+            const index = objectStore.index('type');
+            const request = index.getAll(type);
 
-        // Прокрутка колёсиком мыши на ПК
-        if (!isMobile) {
-            list.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const delta = e.deltaY || e.deltaX; // Используем вертикальное или горизонтальное движение колеса
-                list.scrollBy({ left: delta * 2, behavior: 'smooth' }); // Умножаем для большей чувствительности
-            });
-        }
+            request.onsuccess = function(event) {
+                const items = event.target.result || [];
+                renderTopList(listId, items, limit);
+            };
+        });
+    }
 
-        // Кнопки "влево" и "вправо" на ПК
-        if (!isMobile) {
-            prevButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const list = this.nextElementSibling;
-                    if (list) {
-                        list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
-                    } else {
-                        console.error('Список для кнопки "prev" не найден');
-                    }
-                });
-            });
+    function renderTopList(listId, items, limit) {
+        const list = document.getElementById(listId);
+        if (!list) return;
 
-            nextButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const list = this.previousElementSibling;
-                    if (list) {
-                        list.scrollBy({ left: scrollStep, behavior: 'smooth' });
-                    } else {
-                        console.error('Список для кнопки "next" не найден');
-                    }
-                });
-            });
-        }
-    });
-}
-                }, index * 100);
+        const allowedStatuses = ['🌕', '🌗'];
+        const ratings = { '💀': 0, '💩': 1, '🍋': 2, '🍅': 3, '🍊': 4, '🍒': 5, '🌽': 6, '🧅': 7 };
+        let filteredItems = items
+            .filter(item => allowedStatuses.includes(item.status))
+            .filter(item => {
+                const ratingValue = ratings[item.rating];
+                return ratingValue >= 4 && ratingValue <= 7;
+            })
+            .sort((a, b) => ratings[b.rating] - ratings[a.rating])
+            .slice(0, limit);
+
+        list.innerHTML = '';
+        if (filteredItems.length === 0) {
+            list.innerHTML = '<p>Нет элементов</p>';
+        } else {
+            filteredItems.forEach((item, index) => {
+                const div = document.createElement('div');
+                const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;" loading="lazy">` : 'Нет изображения';
+                div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating}<br>
+                    ${item.genre ? `Жанр: ${item.genre}<br>` : ''}
+                    ${item.year ? `Год: ${item.year}<br>` : ''}
+                    ${item.country ? `Страна: ${item.country}<br>` : ''}
+                    ${item.author ? `${item.type === 'books' || item.type === 'music' ? 'Автор' : 'Разработчик'}: ${item.author}<br>` : ''}
+                    ${item.description ? `Описание: ${item.description}<br>` : ''}
+                    Характеристика: ${item.characteristics.join(', ') || 'Нет'}`;
+                list.appendChild(div);
+                setTimeout(() => div.classList.add('visible'), index * 100);
             });
         }
 
@@ -729,115 +560,47 @@ document.addEventListener('DOMContentLoaded', function() {
         const prevButtons = document.querySelectorAll('.prev-btn');
         const nextButtons = document.querySelectorAll('.next-btn');
         const scrollStep = 200;
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         topLists.forEach(list => {
-            let startX = 0;
-            let scrollLeft = 0;
-            let isDragging = false;
-            let velocity = 0;
-            let lastX = 0;
-            let lastTime = 0;
-            let animationFrameId = null;
-
-            list.addEventListener('mousedown', startDragging);
-            list.addEventListener('mousemove', drag);
-            list.addEventListener('mouseup', stopDragging);
-            list.addEventListener('mouseleave', stopDragging);
-
-            list.addEventListener('touchstart', startDragging, { passive: true });
-            list.addEventListener('touchmove', drag, { passive: false });
-            list.addEventListener('touchend', stopDragging, { passive: true });
-
-            list.addEventListener('scroll', () => updateScrollIndicator(list));
-
-            function startDragging(e) {
+            // Прокрутка пальцем на мобильных
+            let startX, scrollLeft, isDragging = false;
+            list.addEventListener('touchstart', (e) => {
                 isDragging = true;
-                startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+                startX = e.touches[0].pageX;
                 scrollLeft = list.scrollLeft;
-                lastX = startX;
-                lastTime = performance.now();
-                velocity = 0;
-                if (animationFrameId) {
-                    cancelAnimationFrame(animationFrameId);
-                    animationFrameId = null;
-                }
-            }
-
-            function drag(e) {
+            }, { passive: true });
+            list.addEventListener('touchmove', (e) => {
                 if (!isDragging) return;
                 e.preventDefault();
-                const x = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-                const currentTime = performance.now();
-                const deltaX = x - startX;
-                list.scrollLeft = scrollLeft - deltaX;
+                const x = e.touches[0].pageX;
+                const delta = x - startX;
+                list.scrollLeft = scrollLeft - delta;
+            }, { passive: false });
+            list.addEventListener('touchend', () => isDragging = false, { passive: true });
 
-                // Вычисляем скорость (пиксели в миллисекунду)
-                const timeDiff = currentTime - lastTime;
-                if (timeDiff > 0) {
-                    velocity = (x - lastX) / timeDiff;
-                }
-                lastX = x;
-                lastTime = currentTime;
-            }
+            // Прокрутка колёсиком на ПК
+            list.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                list.scrollBy({ left: e.deltaY * 2, behavior: 'smooth' });
+            }, { passive: false });
 
-            function stopDragging() {
-                if (!isDragging) return;
-                isDragging = false;
-
-                // Добавляем инерцию
-                if (Math.abs(velocity) > 0.1) { // Минимальная скорость для запуска инерции
-                    function animateScroll() {
-                        const currentTime = performance.now();
-                        const timeDiff = currentTime - lastTime;
-                        list.scrollLeft -= velocity * timeDiff * 60; // Умножаем на 60 для плавности (кадры в секунду)
-                        velocity *= 0.95; // Коэффициент трения для замедления
-
-                        // Ограничиваем прокрутку в пределах списка
-                        if (list.scrollLeft <= 0) {
-                            list.scrollLeft = 0;
-                            velocity = 0;
-                        } else if (list.scrollLeft >= list.scrollWidth - list.clientWidth) {
-                            list.scrollLeft = list.scrollWidth - list.clientWidth;
-                            velocity = 0;
-                        }
-
-                        if (Math.abs(velocity) > 0.1) {
-                            lastTime = currentTime;
-                            animationFrameId = requestAnimationFrame(animateScroll);
-                        } else {
-                            animationFrameId = null;
-                        }
-                    }
-                    lastTime = performance.now();
-                    animationFrameId = requestAnimationFrame(animateScroll);
-                }
-            }
+            // Обновление индикатора прокрутки
+            list.addEventListener('scroll', () => updateScrollIndicator(list));
         });
 
-        if (!isMobile) {
-            prevButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const list = this.nextElementSibling;
-                    if (list) {
-                        list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
-                    } else {
-                        console.error('Список для кнопки "prev" не найден');
-                    }
-                });
+        prevButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const list = this.nextElementSibling;
+                if (list) list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
             });
+        });
 
-            nextButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const list = this.previousElementSibling;
-                    if (list) {
-                        list.scrollBy({ left: scrollStep, behavior: 'smooth' });
-                    } else {
-                        console.error('Список для кнопки "next" не найден');
-                    }
-                });
+        nextButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const list = this.previousElementSibling;
+                if (list) list.scrollBy({ left: scrollStep, behavior: 'smooth' });
             });
-        }
+        });
     }
 
     function updateScrollIndicator(list) {
@@ -852,14 +615,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (scrollWidth <= clientWidth) {
             indicatorBar.style.width = '100%';
             indicatorBar.style.left = '0';
-            return;
+        } else {
+            const scrollPercentage = scrollLeft / (scrollWidth - clientWidth);
+            const barWidthPercentage = clientWidth / scrollWidth;
+            indicatorBar.style.width = `${barWidthPercentage * 100}%`;
+            indicatorBar.style.left = `${scrollPercentage * (100 - barWidthPercentage * 100)}%`;
         }
-
-        const scrollPercentage = scrollLeft / (scrollWidth - clientWidth);
-        const barWidthPercentage = clientWidth / scrollWidth;
-        const barWidth = barWidthPercentage * 100;
-
-        indicatorBar.style.width = `${barWidth}%`;
-        indicatorBar.style.left = `${scrollPercentage * (100 - barWidth)}%`;
     }
 });
