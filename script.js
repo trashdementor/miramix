@@ -772,20 +772,23 @@ document.addEventListener('DOMContentLoaded', function() {
             function stopDragging() {
                 if (!isDragging) return;
                 isDragging = false;
-                if (Math.abs(velocity) > 0.01) { // Уменьшаем порог остановки
+                if (Math.abs(velocity) > 0.01) {
+                    const initialVelocity = Math.abs(velocity); // Сохраняем начальную скорость
+                    const maxDistance = Math.min(200 + initialVelocity * 200, 400); // Динамическая максимальная дистанция
+
                     function animateScroll() {
                         const currentTime = performance.now();
                         const timeDiff = currentTime - lastTime;
                         const scrollAmount = velocity * timeDiff * 5; // Минимальная инерция
                         list.scrollLeft -= scrollAmount;
                         totalDistance += Math.abs(scrollAmount);
-                        velocity *= 0.9; // Более плавное затухание
+                        velocity *= 0.9; // Плавное затухание
 
-                        if (totalDistance >= 200 || list.scrollLeft <= 0 || list.scrollLeft >= list.scrollWidth - list.clientWidth) {
+                        if (totalDistance >= maxDistance || list.scrollLeft <= 0 || list.scrollLeft >= list.scrollWidth - list.clientWidth) {
                             velocity = 0;
                         }
 
-                        if (Math.abs(velocity) > 0.01 && totalDistance < 200) {
+                        if (Math.abs(velocity) > 0.01 && totalDistance < maxDistance) {
                             lastTime = currentTime;
                             animationFrameId = requestAnimationFrame(animateScroll);
                         }
