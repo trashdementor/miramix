@@ -672,82 +672,51 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function loadTopContent() {
-        if (!db) {
-            console.error('База данных не инициализирована');
-            return;
+    function setupNavigation() {
+    const topLists = document.querySelectorAll('.content-list.horizontal');
+    const prevButtons = document.querySelectorAll('.prev-btn');
+    const nextButtons = document.querySelectorAll('.next-btn');
+    const scrollStep = 200;
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    topLists.forEach(list => {
+        list.addEventListener('scroll', () => updateScrollIndicator(list));
+
+        // Прокрутка колёсиком мыши на ПК
+        if (!isMobile) {
+            list.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY || e.deltaX; // Используем вертикальное или горизонтальное движение колеса
+                list.scrollBy({ left: delta * 2, behavior: 'smooth' }); // Умножаем для большей чувствительности
+            });
         }
 
-        const types = [
-            { type: 'films', limit: 15, listId: 'top-films-list' },
-            { type: 'cartoons', limit: 15, listId: 'top-cartoons-list' },
-            { type: 'series', limit: 15, listId: 'top-series-list' },
-            { type: 'cartoon-series', limit: 15, listId: 'top-cartoon-series-list' },
-            { type: 'books', limit: 10, listId: 'top-books-list' },
-            { type: 'music', limit: 10, listId: 'top-music-list' },
-            { type: 'games', limit: 10, listId: 'top-games-list' },
-            { type: 'programs', limit: 10, listId: 'top-programs-list' },
-            { type: 'recipes', limit: 10, listId: 'top-recipes-list' },
-            { type: 'sites', limit: 10, listId: 'top-sites-list' }
-        ];
+        // Кнопки "влево" и "вправо" на ПК
+        if (!isMobile) {
+            prevButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const list = this.nextElementSibling;
+                    if (list) {
+                        list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
+                    } else {
+                        console.error('Список для кнопки "prev" не найден');
+                    }
+                });
+            });
 
-        types.forEach(({ type, limit, listId }) => {
-            const transaction = db.transaction(['content'], 'readonly');
-            const objectStore = transaction.objectStore('content');
-            const index = objectStore.index('type');
-            const request = index.getAll(type);
-
-            request.onsuccess = function(event) {
-                const items = event.target.result || [];
-                console.log(`Тип: ${type}, Загружено элементов: ${items.length}`);
-                renderTopList(listId, items, limit);
-            };
-            request.onerror = function(event) {
-                console.error(`Ошибка загрузки данных для ${type}:`, event.target.error);
-            };
-        });
-    }
-
-    function renderTopList(listId, items, limit) {
-        const list = document.getElementById(listId);
-        if (!list) {
-            console.error(`Элемент с ID ${listId} не найден`);
-            return;
+            nextButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const list = this.previousElementSibling;
+                    if (list) {
+                        list.scrollBy({ left: scrollStep, behavior: 'smooth' });
+                    } else {
+                        console.error('Список для кнопки "next" не найден');
+                    }
+                });
+            });
         }
-
-        const allowedStatuses = ['🌕', '🌗'];
-        let filteredItems = items.filter(item => allowedStatuses.includes(item.status));
-
-        const ratings = { '💀': 0, '💩': 1, '🍋': 2, '🍅': 3, '🍊': 4, '🍒': 5, '🌽': 6, '🧅': 7 };
-        filteredItems = filteredItems.filter(item => {
-            const ratingValue = ratings[item.rating];
-            return ratingValue >= 4 && ratingValue <= 7;
-        });
-
-        filteredItems.sort((a, b) => {
-            const ratingsOrder = { '🧅': 7, '🌽': 6, '🍒': 5, '🍊': 4, '🍅': 3, '🍋': 2, '💩': 1, '💀': 0 };
-            return ratingsOrder[b.rating] - ratingsOrder[a.rating];
-        });
-
-        const topItems = filteredItems.slice(0, limit);
-
-        list.innerHTML = '';
-        if (topItems.length === 0) {
-            list.innerHTML = '<p>Нет элементов, соответствующих критериям</p>';
-        } else {
-            topItems.forEach((item, index) => {
-                const div = document.createElement('div');
-                const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;" loading="lazy">` : 'Нет изображения';
-                const genreText = item.genre ? `Жанр: ${item.genre}` : '';
-                const yearText = item.year ? `Год: ${item.year}` : '';
-                const countryText = item.country ? `Страна: ${item.country}` : '';
-                const authorText = item.author ? `${item.type === 'books' || item.type === 'music' ? 'Автор' : 'Разработчик'}: ${item.author}` : '';
-                const descText = item.description ? `Описание: ${item.description}` : '';
-                div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} - Характеристика: ${item.characteristics.join(', ') || 'Нет'} 
-                    ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''}`;
-                list.appendChild(div);
-                setTimeout(() => {
-                    div.classList.add('visible');
+    });
+}
                 }, index * 100);
             });
         }
