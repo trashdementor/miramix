@@ -571,7 +571,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 console.log('Используемый токен для сохранения:', accessToken);
 
-                // Устанавливаем токен в gapi.client
                 gapi.client.setToken({ access_token: accessToken });
 
                 const metadata = {
@@ -712,7 +711,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderTopList(listId, items, limit) {
         const list = document.getElementById(listId);
         if (!list) {
-            console.error(`Элемент с ID drei у ${listId} не найден`);
+            console.error(`Элемент с ID ${listId} не найден`);
             return;
         }
 
@@ -749,7 +748,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 list.appendChild(div);
                 setTimeout(() => {
                     div.classList.add('visible');
-                }, index * 100); // Задержка 100мс между элементами для анимации
+                }, index * 100);
             });
         }
 
@@ -767,6 +766,10 @@ document.addEventListener('DOMContentLoaded', function() {
             let startX = 0;
             let scrollLeft = 0;
             let isDragging = false;
+            let velocity = 0;
+            let lastX = 0;
+            let lastTime = 0;
+            let animationFrameId = null;
 
             list.addEventListener('mousedown', startDragging);
             list.addEventListener('mousemove', drag);
@@ -783,20 +786,63 @@ document.addEventListener('DOMContentLoaded', function() {
                 isDragging = true;
                 startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
                 scrollLeft = list.scrollLeft;
-                list.style.scrollBehavior = 'auto'; // Отключаем плавность на время перетаскивания
+                lastX = startX;
+                lastTime = performance.now();
+                velocity = 0;
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
             }
 
             function drag(e) {
                 if (!isDragging) return;
                 e.preventDefault();
                 const x = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-                const delta = x - startX;
-                list.scrollLeft = scrollLeft - delta;
+                const currentTime = performance.now();
+                const deltaX = x - startX;
+                list.scrollLeft = scrollLeft - deltaX;
+
+                // Вычисляем скорость (пиксели в миллисекунду)
+                const timeDiff = currentTime - lastTime;
+                if (timeDiff > 0) {
+                    velocity = (x - lastX) / timeDiff;
+                }
+                lastX = x;
+                lastTime = currentTime;
             }
 
             function stopDragging() {
+                if (!isDragging) return;
                 isDragging = false;
-                list.style.scrollBehavior = 'smooth'; // Включаем плавность обратно
+
+                // Добавляем инерцию
+                if (Math.abs(velocity) > 0.1) { // Минимальная скорость для запуска инерции
+                    function animateScroll() {
+                        const currentTime = performance.now();
+                        const timeDiff = currentTime - lastTime;
+                        list.scrollLeft -= velocity * timeDiff * 60; // Умножаем на 60 для плавности (кадры в секунду)
+                        velocity *= 0.95; // Коэффициент трения для замедления
+
+                        // Ограничиваем прокрутку в пределах списка
+                        if (list.scrollLeft <= 0) {
+                            list.scrollLeft = 0;
+                            velocity = 0;
+                        } else if (list.scrollLeft >= list.scrollWidth - list.clientWidth) {
+                            list.scrollLeft = list.scrollWidth - list.clientWidth;
+                            velocity = 0;
+                        }
+
+                        if (Math.abs(velocity) > 0.1) {
+                            lastTime = currentTime;
+                            animationFrameId = requestAnimationFrame(animateScroll);
+                        } else {
+                            animationFrameId = null;
+                        }
+                    }
+                    lastTime = performance.now();
+                    animationFrameId = requestAnimationFrame(animateScroll);
+                }
             }
         });
 
