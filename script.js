@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', function() {
         loadTopContent();
         setupNavigation();
         initGoogleDrive();
+        // Показываем первую секцию по умолчанию
+        document.querySelector('.section').classList.add('active');
     };
 
     request.onupgradeneeded = function(event) {
@@ -121,13 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Authorization': `Bearer ${token}`
                 }
             });
-            const isValid = response.ok;
-            console.log('Проверка токена:', token, 'Валиден:', isValid, 'Статус:', response.status);
-            if (!isValid) {
-                const errorText = await response.text();
-                console.error('Ошибка проверки токена:', errorText);
-            }
-            return isValid;
+            return response.ok;
         } catch (error) {
             console.error('Ошибка при проверке токена:', error);
             return false;
@@ -165,7 +161,10 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const targetId = this.getAttribute('href').substring(1);
             sections.forEach(section => {
-                section.style.display = section.id === targetId ? 'block' : 'none';
+                section.classList.remove('active');
+                if (section.id === targetId) {
+                    section.classList.add('active');
+                }
             });
             if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(targetId)) {
                 setupSearch(targetId);
@@ -208,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('Изображение загружено');
                 } else {
                     console.error('Ошибка ImgBB:', data);
-                    alert('Ошибка загрузки изображения: ' + (data.error?.message || 'Неизвестная ошибка'));
+                    alert('Ошибка загрузки изображения');
                     return;
                 }
             } catch (error) {
@@ -518,7 +517,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     transaction.oncomplete = function() {
                         alert('Данные успешно импортированы');
                         loadTopContent();
-                        const currentSection = document.querySelector('.section:not([style*="display: none"])').id;
+                        const currentSection = document.querySelector('.section.active').id;
                         if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(currentSection)) {
                             setupSearch(currentSection);
                         }
@@ -539,38 +538,20 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('save-to-drive-btn').addEventListener('click', async function() {
         if (!db) {
             alert('База данных ещё не готова.');
-            console.error('База данных не инициализирована');
             return;
         }
 
-        console.log('Начало сохранения в Google Drive');
         const transaction = db.transaction(['content'], 'readonly');
         const objectStore = transaction.objectStore('content');
         const request = objectStore.getAll();
 
         request.onsuccess = async function(event) {
-            console.log('Запрос на получение данных выполнен');
             const data = event.target.result;
-            console.log('Данные из базы:', data);
-
-            if (!data || !Array.isArray(data) || data.length === 0) {
-                alert('Нет данных для сохранения или данные некорректны.');
-                console.error('Данные отсутствуют или не являются массивом:', data);
-                return;
-            }
-
             const json = JSON.stringify(data, null, 2);
-            console.log('JSON для сохранения:', json);
             const blob = new Blob([json], { type: 'application/json' });
-            console.log('Blob создан, размер:', blob.size);
 
             try {
                 const accessToken = await getAccessToken();
-                if (!accessToken) {
-                    throw new Error('Токен не получен');
-                }
-                console.log('Используемый токен для сохранения:', accessToken);
-
                 gapi.client.setToken({ access_token: accessToken });
 
                 const metadata = {
@@ -587,39 +568,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     fields: 'id, name'
                 });
 
-                console.log('Файл сохранён в Drive:', response.result);
                 alert('Данные успешно сохранены в Google Drive как miramix_data.json');
             } catch (error) {
                 console.error('Ошибка при сохранении в Google Drive:', error);
                 alert('Ошибка при сохранении: ' + error.message);
             }
         };
-
-        request.onerror = function(event) {
-            console.error('Ошибка получения данных из базы:', event.target.error);
-            alert('Ошибка получения данных из базы');
-        };
     });
 
     document.getElementById('load-from-drive-btn').addEventListener('click', async function() {
         try {
             const accessToken = await getAccessToken();
-            if (!accessToken) {
-                throw new Error('Токен не получен');
-            }
-            console.log('Используемый токен для загрузки:', accessToken);
-
             const listResponse = await fetch('https://www.googleapis.com/drive/v3/files?q=name%3D%27miramix_data.json%27&fields=files(id,name,createdTime)&orderBy=createdTime%20desc', {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }
             });
 
-            if (!listResponse.ok) {
-                const errorText = await listResponse.text();
-                throw new Error(`Ошибка поиска файла: ${listResponse.status} - ${errorText}`);
-            }
-
+            if (!listResponse.ok) throw new Error('Ошибка поиска файла');
             const listData = await listResponse.json();
             const files = listData.files;
             if (files && files.length > 0) {
@@ -630,11 +596,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
 
-                if (!fileResponse.ok) {
-                    const errorText = await fileResponse.text();
-                    throw new Error(`Ошибка загрузки файла: ${fileResponse.status} - ${errorText}`);
-                }
-
+                if (!fileResponse.ok) throw new Error('Ошибка загрузки файла');
                 const data = await fileResponse.json();
                 if (!Array.isArray(data)) {
                     alert('Неверный формат файла из Google Drive');
@@ -652,19 +614,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     transaction.oncomplete = function() {
                         alert('Данные успешно загружены из Google Drive');
                         loadTopContent();
-                        const currentSection = document.querySelector('.section:not([style*="display: none"])').id;
+                        const currentSection = document.querySelector('.section.active').id;
                         if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(currentSection)) {
                             setupSearch(currentSection);
                         }
                     };
-                    transaction.onerror = function(event) {
-                        console.error('Ошибка при импорте из Drive:', event.target.error);
-                        alert('Ошибка при импорте данных из Google Drive');
-                    };
                 };
             } else {
                 alert('Файл miramix_data.json не найден в Google Drive');
-                console.log('Список файлов:', listData);
             }
         } catch (error) {
             console.error('Ошибка загрузки из Drive:', error);
@@ -672,51 +629,68 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function setupNavigation() {
-    const topLists = document.querySelectorAll('.content-list.horizontal');
-    const prevButtons = document.querySelectorAll('.prev-btn');
-    const nextButtons = document.querySelectorAll('.next-btn');
-    const scrollStep = 200;
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    function loadTopContent() {
+        if (!db) return;
 
-    topLists.forEach(list => {
-        list.addEventListener('scroll', () => updateScrollIndicator(list));
+        const types = [
+            { type: 'films', limit: 15, listId: 'top-films-list' },
+            { type: 'cartoons', limit: 15, listId: 'top-cartoons-list' },
+            { type: 'series', limit: 15, listId: 'top-series-list' },
+            { type: 'cartoon-series', limit: 15, listId: 'top-cartoon-series-list' },
+            { type: 'books', limit: 10, listId: 'top-books-list' },
+            { type: 'music', limit: 10, listId: 'top-music-list' },
+            { type: 'games', limit: 10, listId: 'top-games-list' },
+            { type: 'programs', limit: 10, listId: 'top-programs-list' },
+            { type: 'recipes', limit: 10, listId: 'top-recipes-list' },
+            { type: 'sites', limit: 10, listId: 'top-sites-list' }
+        ];
 
-        // Прокрутка колёсиком мыши на ПК
-        if (!isMobile) {
-            list.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const delta = e.deltaY || e.deltaX; // Используем вертикальное или горизонтальное движение колеса
-                list.scrollBy({ left: delta * 2, behavior: 'smooth' }); // Умножаем для большей чувствительности
-            });
-        }
+        types.forEach(({ type, limit, listId }) => {
+            const transaction = db.transaction(['content'], 'readonly');
+            const objectStore = transaction.objectStore('content');
+            const index = objectStore.index('type');
+            const request = index.getAll(type);
 
-        // Кнопки "влево" и "вправо" на ПК
-        if (!isMobile) {
-            prevButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const list = this.nextElementSibling;
-                    if (list) {
-                        list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
-                    } else {
-                        console.error('Список для кнопки "prev" не найден');
-                    }
-                });
-            });
+            request.onsuccess = function(event) {
+                const items = event.target.result || [];
+                renderTopList(listId, items, limit);
+            };
+        });
+    }
 
-            nextButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const list = this.previousElementSibling;
-                    if (list) {
-                        list.scrollBy({ left: scrollStep, behavior: 'smooth' });
-                    } else {
-                        console.error('Список для кнопки "next" не найден');
-                    }
-                });
-            });
-        }
-    });
-}
+    function renderTopList(listId, items, limit) {
+        const list = document.getElementById(listId);
+        if (!list) return;
+
+        const allowedStatuses = ['🌕', '🌗'];
+        let filteredItems = items.filter(item => allowedStatuses.includes(item.status));
+
+        const ratings = { '💀': 0, '💩': 1, '🍋': 2, '🍅': 3, '🍊': 4, '🍒': 5, '🌽': 6, '🧅': 7 };
+        filteredItems = filteredItems.filter(item => {
+            const ratingValue = ratings[item.rating];
+            return ratingValue >= 4 && ratingValue <= 7;
+        });
+
+        filteredItems.sort((a, b) => ratings[b.rating] - ratings[a.rating]);
+        const topItems = filteredItems.slice(0, limit);
+
+        list.innerHTML = '';
+        if (topItems.length === 0) {
+            list.innerHTML = '<p>Нет элементов, соответствующих критериям</p>';
+        } else {
+            topItems.forEach((item, index) => {
+                const div = document.createElement('div');
+                const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;" loading="lazy">` : 'Нет изображения';
+                const genreText = item.genre ? `Жанр: ${item.genre}` : '';
+                const yearText = item.year ? `Год: ${item.year}` : '';
+                const countryText = item.country ? `Страна: ${item.country}` : '';
+                const authorText = item.author ? `${item.type === 'books' || item.type === 'music' ? 'Автор' : 'Разработчик'}: ${item.author}` : '';
+                const descText = item.description ? `Описание: ${item.description}` : '';
+                div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} - Характеристика: ${item.characteristics.join(', ') || 'Нет'} 
+                    ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''}`;
+                list.appendChild(div);
+                setTimeout(() => {
+                    div.classList.add('visible');
                 }, index * 100);
             });
         }
@@ -735,83 +709,45 @@ document.addEventListener('DOMContentLoaded', function() {
             let startX = 0;
             let scrollLeft = 0;
             let isDragging = false;
-            let velocity = 0;
-            let lastX = 0;
-            let lastTime = 0;
-            let animationFrameId = null;
 
+            // Drag для ПК
             list.addEventListener('mousedown', startDragging);
             list.addEventListener('mousemove', drag);
             list.addEventListener('mouseup', stopDragging);
             list.addEventListener('mouseleave', stopDragging);
 
+            // Touch для мобильных
             list.addEventListener('touchstart', startDragging, { passive: true });
             list.addEventListener('touchmove', drag, { passive: false });
             list.addEventListener('touchend', stopDragging, { passive: true });
 
             list.addEventListener('scroll', () => updateScrollIndicator(list));
 
+            // Прокрутка колёсиком на ПК
+            if (!isMobile) {
+                list.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    const delta = e.deltaY || e.deltaX;
+                    list.scrollBy({ left: delta * 2, behavior: 'smooth' });
+                });
+            }
+
             function startDragging(e) {
                 isDragging = true;
                 startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
                 scrollLeft = list.scrollLeft;
-                lastX = startX;
-                lastTime = performance.now();
-                velocity = 0;
-                if (animationFrameId) {
-                    cancelAnimationFrame(animationFrameId);
-                    animationFrameId = null;
-                }
             }
 
             function drag(e) {
                 if (!isDragging) return;
                 e.preventDefault();
                 const x = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-                const currentTime = performance.now();
-                const deltaX = x - startX;
-                list.scrollLeft = scrollLeft - deltaX;
-
-                // Вычисляем скорость (пиксели в миллисекунду)
-                const timeDiff = currentTime - lastTime;
-                if (timeDiff > 0) {
-                    velocity = (x - lastX) / timeDiff;
-                }
-                lastX = x;
-                lastTime = currentTime;
+                const delta = x - startX;
+                list.scrollLeft = scrollLeft - delta;
             }
 
             function stopDragging() {
-                if (!isDragging) return;
                 isDragging = false;
-
-                // Добавляем инерцию
-                if (Math.abs(velocity) > 0.1) { // Минимальная скорость для запуска инерции
-                    function animateScroll() {
-                        const currentTime = performance.now();
-                        const timeDiff = currentTime - lastTime;
-                        list.scrollLeft -= velocity * timeDiff * 60; // Умножаем на 60 для плавности (кадры в секунду)
-                        velocity *= 0.95; // Коэффициент трения для замедления
-
-                        // Ограничиваем прокрутку в пределах списка
-                        if (list.scrollLeft <= 0) {
-                            list.scrollLeft = 0;
-                            velocity = 0;
-                        } else if (list.scrollLeft >= list.scrollWidth - list.clientWidth) {
-                            list.scrollLeft = list.scrollWidth - list.clientWidth;
-                            velocity = 0;
-                        }
-
-                        if (Math.abs(velocity) > 0.1) {
-                            lastTime = currentTime;
-                            animationFrameId = requestAnimationFrame(animateScroll);
-                        } else {
-                            animationFrameId = null;
-                        }
-                    }
-                    lastTime = performance.now();
-                    animationFrameId = requestAnimationFrame(animateScroll);
-                }
             }
         });
 
@@ -821,8 +757,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     const list = this.nextElementSibling;
                     if (list) {
                         list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
-                    } else {
-                        console.error('Список для кнопки "prev" не найден');
                     }
                 });
             });
@@ -832,8 +766,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     const list = this.previousElementSibling;
                     if (list) {
                         list.scrollBy({ left: scrollStep, behavior: 'smooth' });
-                    } else {
-                        console.error('Список для кнопки "next" не найден');
                     }
                 });
             });
@@ -852,14 +784,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (scrollWidth <= clientWidth) {
             indicatorBar.style.width = '100%';
             indicatorBar.style.left = '0';
-            return;
+        } else {
+            const scrollPercentage = scrollLeft / (scrollWidth - clientWidth);
+            const barWidthPercentage = clientWidth / scrollWidth;
+            indicatorBar.style.width = `${barWidthPercentage * 100}%`;
+            indicatorBar.style.left = `${scrollPercentage * (100 - barWidthPercentage * 100)}%`;
         }
-
-        const scrollPercentage = scrollLeft / (scrollWidth - clientWidth);
-        const barWidthPercentage = clientWidth / scrollWidth;
-        const barWidth = barWidthPercentage * 100;
-
-        indicatorBar.style.width = `${barWidth}%`;
-        indicatorBar.style.left = `${scrollPercentage * (100 - barWidth)}%`;
     }
 });
