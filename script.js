@@ -778,12 +778,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const prevButtons = document.querySelectorAll('.prev-btn');
         const nextButtons = document.querySelectorAll('.next-btn');
         const scrollStep = 200;
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         topLists.forEach(list => {
             let startX = 0;
             let scrollLeft = 0;
             let isDragging = false;
 
+            // Перетаскивание для всех устройств
             list.addEventListener('mousedown', startDragging);
             list.addEventListener('mousemove', drag);
             list.addEventListener('mouseup', stopDragging);
@@ -814,19 +816,34 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        prevButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const list = this.nextElementSibling;
-                list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
+        // Кнопки только для не-мобильных устройств
+        if (!isMobile) {
+            prevButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const list = this.nextElementSibling;
+                    if (list) {
+                        list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
+                    } else {
+                        console.error('Список для кнопки "prev" не найден');
+                    }
+                });
             });
-        });
 
-        nextButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const list = this.previousElementSibling;
-                list.scrollBy({ left: scrollStep, behavior: 'smooth' });
+            nextButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const list = this.previousElementSibling;
+                    if (list) {
+                        list.scrollBy({ left: scrollStep, behavior: 'smooth' });
+                    } else {
+                        console.error('Список для кнопки "next" не найден');
+                    }
+                });
             });
-        });
+        } else {
+            // Скрываем кнопки на мобильных устройствах
+            prevButtons.forEach(btn => btn.style.display = 'none');
+            nextButtons.forEach(btn => btn.style.display = 'none');
+        }
     }
 
     function updateScrollIndicator(list) {
