@@ -561,7 +561,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const json = JSON.stringify(data, null, 2);
             console.log('JSON для сохранения:', json);
-
             const blob = new Blob([json], { type: 'application/json' });
             console.log('Blob создан, размер:', blob.size);
 
@@ -572,40 +571,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 console.log('Используемый токен для сохранения:', accessToken);
 
-                const boundary = 'foo_bar_baz';
-                const delimiter = `\r\n--${boundary}\r\n`;
-                const closeDelim = `\r\n--${boundary}--`;
-
                 const metadata = {
                     name: 'miramix_data.json',
                     mimeType: 'application/json'
                 };
 
-                const multipartBody = 
-                    delimiter +
-                    'Content-Type: application/json\r\n\r\n' +
-                    JSON.stringify(metadata) +
-                    delimiter +
-                    'Content-Type: application/json\r\n\r\n' +
-                    json +
-                    closeDelim;
-
-                const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'Content-Type': `multipart/related; boundary=${boundary}`
+                const response = await gapi.client.drive.files.create({
+                    resource: metadata,
+                    media: {
+                        mimeType: 'application/json',
+                        body: blob
                     },
-                    body: multipartBody
+                    fields: 'id, name'
                 });
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Ошибка HTTP ${response.status}: ${errorText}`);
-                }
-
-                const result = await response.json();
-                console.log('Файл успешно сохранён в Drive:', result);
+                console.log('Файл сохранён в Drive:', response.result);
                 alert('Данные успешно сохранены в Google Drive как miramix_data.json');
             } catch (error) {
                 console.error('Ошибка при сохранении в Google Drive:', error);
@@ -791,9 +771,9 @@ document.addEventListener('DOMContentLoaded', function() {
             list.addEventListener('mouseup', stopDragging);
             list.addEventListener('mouseleave', stopDragging);
 
-            list.addEventListener('touchstart', startDragging);
-            list.addEventListener('touchmove', drag);
-            list.addEventListener('touchend', stopDragging);
+            list.addEventListener('touchstart', startDragging, { passive: true });
+            list.addEventListener('touchmove', drag, { passive: false });
+            list.addEventListener('touchend', stopDragging, { passive: true });
 
             list.addEventListener('scroll', () => updateScrollIndicator(list));
 
@@ -801,6 +781,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 isDragging = true;
                 startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
                 scrollLeft = list.scrollLeft;
+                list.style.scrollBehavior = 'auto'; // Отключаем плавность на время перетаскивания
             }
 
             function drag(e) {
@@ -813,6 +794,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             function stopDragging() {
                 isDragging = false;
+                list.style.scrollBehavior = 'smooth'; // Включаем плавность обратно
             }
         });
 
@@ -839,10 +821,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             });
-        } else {
-            // Скрываем кнопки на мобильных устройствах
-            prevButtons.forEach(btn => btn.style.display = 'none');
-            nextButtons.forEach(btn => btn.style.display = 'none');
         }
     }
 
