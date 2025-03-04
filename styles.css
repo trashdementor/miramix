@@ -10,14 +10,14 @@ header {
     background-color: #111216;
     padding: 10px;
     display: flex;
-    justify-content: space-between; /* Логотип и навигация слева, настройки справа */
+    justify-content: space-between;
     align-items: center;
 }
 
 .left-header {
     display: flex;
     align-items: center;
-    gap: 10px; /* Отступ между логотипом и навигацией */
+    gap: 10px;
 }
 
 .logo img {
@@ -81,7 +81,11 @@ main {
 }
 
 .section {
-    display: block;
+    display: none; /* Скрываем все разделы по умолчанию */
+}
+
+.section.active {
+    display: block; /* Показываем только активный раздел */
 }
 
 .search-menu {
@@ -261,14 +265,14 @@ body.modal-open {
     background-color: #434448;
     border-radius: 4px;
     min-width: 0;
-    opacity: 0; /* Начальное состояние */
-    transform: translateY(20px); /* Начальное смещение */
-    transition: opacity 0.5s ease, transform 0.5s ease; /* Плавный переход */
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
 .content-list.horizontal div.visible {
-    opacity: 1; /* Конечное состояние */
-    transform: translateY(0); /* Возвращаем на место */
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .content-list.horizontal img {
@@ -306,118 +310,50 @@ body.modal-open {
 }
 
 /* Уникальные цвета для разделов */
-#films {
-    background-color: #111216;
-}
-#films h2 {
-    color: #ffadad;
-}
-#films .search-menu button, #films .content-list button {
-    background-color: #de9696;
-}
+#films { background-color: #111216; }
+#films h2 { color: #ffadad; }
+#films .search-menu button, #films .content-list button { background-color: #de9696; }
 
-#cartoons {
-    background-color: #111216;
-}
-#cartoons h2 {
-    color: #ffadad;
-}
-#cartoons .search-menu button, #cartoons .content-list button {
-    background-color: #de9696;
-}
+#cartoons { background-color: #111216; }
+#cartoons h2 { color: #ffadad; }
+#cartoons .search-menu button, #cartoons .content-list button { background-color: #de9696; }
 
-#series {
-    background-color: #111216;
-}
-#series h2 {
-    color: #ffd6a5;
-}
-#series .search-menu button, #series .content-list button {
-    background-color: #deba8f;
-}
+#series { background-color: #111216; }
+#series h2 { color: #ffd6a5; }
+#series .search-menu button, #series .content-list button { background-color: #deba8f; }
 
-#cartoon-series {
-    background-color: #111216;
-}
-#cartoon-series h2 {
-    color: #ffd6a5;
-}
-#cartoon-series .search-menu button, #cartoon-series .content-list button {
-    background-color: #deba8f;
-}
+#cartoon-series { background-color: #111216; }
+#cartoon-series h2 { color: #ffd6a5; }
+#cartoon-series .search-menu button, #cartoon-series .content-list button { background-color: #deba8f; }
 
-#books {
-    background-color: #111216;
-}
-#books h2 {
-    color: #fdffb6;
-}
-#books .search-menu button, #books .content-list button {
-    background-color: #dcde9e;
-}
+#books { background-color: #111216; }
+#books h2 { color: #fdffb6; }
+#books .search-menu button, #books .content-list button { background-color: #dcde9e; }
 
-#music {
-    background-color: #111216;
-}
-#music h2 {
-    color: #caffbf;
-}
-#music .search-menu button, #music .content-list button {
-    background-color: #afdea6;
-}
+#music { background-color: #111216; }
+#music h2 { color: #caffbf; }
+#music .search-menu button, #music .content-list button { background-color: #afdea6; }
 
-#games {
-    background-color: #111216;
-}
-#games h2 {
-    color: #96e8ff;
-}
-#games .search-menu button, #games .content-list button {
-    background-color: #82cade;
-}
+#games { background-color: #111216; }
+#games h2 { color: #96e8ff; }
+#games .search-menu button, #games .content-list button { background-color: #82cade; }
 
-#programs {
-    background-color: #111216;
-}
-#programs h2 {
-    color: #96e8ff;
-}
-#programs .search-menu button, #programs .content-list button {
-    background-color: #82cade;
-}
+#programs { background-color: #111216; }
+#programs h2 { color: #96e8ff; }
+#programs .search-menu button, #programs .content-list button { background-color: #82cade; }
 
-#recipes {
-    background-color: #111216;
-}
-#recipes h2 {
-    color: #a0c4ff;
-}
-#recipes .search-menu button, #recipes .content-list button {
-    background-color: #8baade;
-}
+#recipes { background-color: #111216; }
+#recipes h2 { color: #a0c4ff; }
+#recipes .search-menu button, #recipes .content-list button { background-color: #8baade; }
 
-#sites {
-    background-color: #111216;
-}
-#sites h2 {
-    color: #bdb2ff;
-}
-#sites .search-menu button, #sites .content-list button {
-    background-color: #a49ade;
-}
+#sites { background-color: #111216; }
+#sites h2 { color: #bdb2ff; }
+#sites .search-menu button, #sites .content-list button { background-color: #a49ade; }
 
-#catalog, #recommendations, #settings {
-    background-color: #111216;
-}
-#settings h2, #settings h3 {
-    color: #f6efdd;
-}
-#settings form button {
-    background-color: #e7d5a6;
-}
-.modal-content form button {
-    background-color: #e7d5a6;
-}
+#catalog, #recommendations, #settings { background-color: #111216; }
+#settings h2, #settings h3 { color: #f6efdd; }
+#settings form button { background-color: #e7d5a6; }
+.modal-content form button { background-color: #e7d5a6; }
 
 /* Адаптивный дизайн */
 @media (max-width: 768px) {
@@ -500,13 +436,13 @@ body.modal-open {
 
     .content-list.horizontal {
         overflow-x: auto;
-        -webkit-overflow-scrolling: touch; /* Повторяем для надёжности */
+        -webkit-overflow-scrolling: touch;
         touch-action: pan-x;
     }
 
     .content-list.horizontal div {
         width: 150px;
-        min-width: 150px; /* Фиксируем ширину для корректной прокрутки */
+        min-width: 150px;
     }
 
     .content-list.horizontal img {
@@ -539,7 +475,7 @@ body.modal-open {
 
     .content-list.horizontal div {
         width: 120px;
-        min-width: 120px; /* Фиксируем ширину */
+        min-width: 120px;
     }
 
     .content-list.horizontal img {
