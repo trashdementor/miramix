@@ -712,6 +712,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let lastX = 0;
             let lastTime = 0;
             let animationFrameId = null;
+            let totalDistance = 0; // Добавляем отслеживание дистанции
 
             list.addEventListener('mousedown', startDragging);
             list.addEventListener('mousemove', drag);
@@ -738,6 +739,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 scrollLeft = list.scrollLeft;
                 lastX = startX;
                 lastTime = performance.now();
+                totalDistance = 0; // Сбрасываем дистанцию
                 if (animationFrameId) cancelAnimationFrame(animationFrameId);
             }
 
@@ -751,7 +753,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const timeDiff = currentTime - lastTime;
                 if (timeDiff > 0) {
-                    velocity = (x - lastX) / timeDiff;
+                    velocity = (x - lastX) / timeDiff / 5; // Делим скорость на 5 для уменьшения
                 }
                 lastX = x;
                 lastTime = currentTime;
@@ -764,13 +766,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     function animateScroll() {
                         const currentTime = performance.now();
                         const timeDiff = currentTime - lastTime;
-                        list.scrollLeft -= velocity * timeDiff * 5; // Уменьшил с 20 до 5
-                        velocity *= 0.95;
+                        const scrollAmount = velocity * timeDiff * 10; // Уменьшенный множитель
+                        list.scrollLeft -= scrollAmount;
+                        totalDistance += Math.abs(scrollAmount); // Суммируем дистанцию
 
-                        if (list.scrollLeft <= 0 || list.scrollLeft >= list.scrollWidth - list.clientWidth) {
+                        velocity *= 0.95; // Затухание
+
+                        // Ограничиваем максимальную дистанцию прокрутки до 300px
+                        if (totalDistance >= 300 || list.scrollLeft <= 0 || list.scrollLeft >= list.scrollWidth - list.clientWidth) {
                             velocity = 0;
                         }
-                        if (Math.abs(velocity) > 0.1) {
+
+                        if (Math.abs(velocity) > 0.1 && totalDistance < 300) {
                             lastTime = currentTime;
                             animationFrameId = requestAnimationFrame(animateScroll);
                         }
