@@ -232,7 +232,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const searchBtn = document.getElementById(`${prefix}-search-btn`);
         const contentList = document.getElementById(`${prefix}-content-list`);
 
-        if (!statusEl || !contentList) return;
+        // Проверка наличия всех элементов
+        if (!statusEl || !titleEl || !genreEl || !yearEl || !countryEl || !authorEl || !descriptionEl || !charEl || !ratingEl || !searchBtn || !contentList) {
+            console.error(`Один или несколько элементов для ${type} не найдены`);
+            return;
+        }
 
         function performSearch() {
             if (!db) return;
@@ -272,7 +276,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     results.forEach(item => {
                         const div = document.createElement('div');
                         const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;" loading="lazy">` : 'Нет изображения';
-                        const genreText = item.genre ? `Жанр: ${item.genre}` : '';
                         div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} 
                             <button onclick="deleteItem(${item.id}, '${type}')">Удалить</button>
                             <button onclick="editItem(${item.id}, '${type}')">Изменить</button>`;
@@ -339,6 +342,11 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.classList.add('modal-open');
         };
     };
+
+    document.getElementById('close-modal').addEventListener('click', function() {
+        document.getElementById('edit-modal').style.display = 'none';
+        document.body.classList.remove('modal-open');
+    });
 
     document.getElementById('edit-resource-form').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -412,6 +420,43 @@ document.addEventListener('DOMContentLoaded', function() {
             a.click();
             URL.revokeObjectURL(url);
         };
+    });
+
+    document.getElementById('import-btn').addEventListener('click', function() {
+        document.getElementById('import-file').click();
+    });
+
+    document.getElementById('import-file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            try {
+                const data = JSON.parse(event.target.result);
+                if (!Array.isArray(data)) {
+                    alert('Неверный формат файла');
+                    return;
+                }
+
+                const transaction = db.transaction(['content'], 'readwrite');
+                const objectStore = transaction.objectStore('content');
+                objectStore.clear().onsuccess = function() {
+                    data.forEach(item => objectStore.add(item));
+                    transaction.oncomplete = function() {
+                        alert('Данные импортированы');
+                        loadTopContent();
+                        const currentSection = document.querySelector('.section.active').id;
+                        if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(currentSection)) {
+                            setupSearch(currentSection);
+                        }
+                    };
+                };
+            } catch (error) {
+                alert('Ошибка при чтении файла: ' + error.message);
+            }
+        };
+        reader.readAsText(file);
     });
 
     document.getElementById('save-to-drive-btn').addEventListener('click', async function() {
