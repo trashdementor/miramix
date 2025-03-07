@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     let db;
     const request = indexedDB.open('MiraMIXDB', 4);
+    let previousSectionId = 'top'; // Храним предыдущий раздел
 
     const CLIENT_ID = '707439660280-hat6arhn868djnimb3bnf418bp2hnjlc.apps.googleusercontent.com';
     const API_KEY = 'AIzaSyDGczTbyZV_CpeEMRpkzPrDPOxwaCR6vbk';
@@ -163,6 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 section.classList.remove('active');
                 if (section.id === targetId) {
                     section.classList.add('active');
+                    previousSectionId = targetId; // Обновляем предыдущий раздел
                 }
             });
             if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(targetId)) {
@@ -329,6 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         div.style.cursor = 'pointer';
                         div.addEventListener('click', (e) => {
                             if (!e.target.tagName.match(/BUTTON|IMG/)) {
+                                previousSectionId = type; // Сохраняем текущий раздел
                                 showResourcePage(item.id);
                             }
                         });
@@ -349,7 +352,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const request = objectStore.delete(id);
         request.onsuccess = function() {
             alert('Элемент удалён');
-            setupSearch(type);
+            const currentSection = document.querySelector('.section.active').id;
+            if (currentSection === 'resource-page') {
+                sections.forEach(section => section.classList.remove('active'));
+                const returnSection = document.getElementById(previousSectionId);
+                returnSection.classList.add('active');
+                if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(previousSectionId)) {
+                    setupSearch(previousSectionId);
+                }
+            } else {
+                setupSearch(type);
+            }
             loadTopContent();
         };
     };
@@ -706,6 +719,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 div.style.cursor = 'pointer';
                 div.addEventListener('click', (e) => {
                     if (!e.target.tagName.match(/IMG/)) {
+                        previousSectionId = 'top'; // Для ТОПа
                         showResourcePage(item.id);
                     }
                 });
@@ -751,8 +765,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
                 ${descText}
-                <button onclick="editItem(${item.id}, '${item.type}')">Изменить</button>
                 <button onclick="deleteItem(${item.id}, '${item.type}')">Удалить</button>
+                <button onclick="editItem(${item.id}, '${item.type}')">Изменить</button>
             `;
 
             sections.forEach(section => section.classList.remove('active'));
@@ -761,11 +775,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     document.querySelector('.back-btn').addEventListener('click', function() {
-        const currentSection = document.querySelector('.section.active');
-        const previousSectionId = currentSection.id === 'resource-page' ? 'top' : currentSection.id;
         sections.forEach(section => section.classList.remove('active'));
-        const previousSection = document.getElementById(previousSectionId);
-        previousSection.classList.add('active');
+        const returnSection = document.getElementById(previousSectionId);
+        returnSection.classList.add('active');
         if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(previousSectionId)) {
             setupSearch(previousSectionId);
         }
@@ -883,18 +895,16 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // Обработка кнопки "Плюс"
         const addButtons = document.querySelectorAll('.add-btn');
         addButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const section = this.getAttribute('data-section');
                 const settingsSection = document.getElementById('settings');
                 
-                // Переключаем на раздел "Настройки"
                 sections.forEach(sec => sec.classList.remove('active'));
                 settingsSection.classList.add('active');
+                previousSectionId = 'settings'; // Обновляем предыдущий раздел
                 
-                // Устанавливаем тип ресурса в форме
                 const resourceType = document.getElementById('resource-type');
                 resourceType.value = section;
             });
