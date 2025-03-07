@@ -141,23 +141,65 @@ document.addEventListener('DOMContentLoaded', function() {
     const sections = document.querySelectorAll('.section');
     const links = document.querySelectorAll('nav a');
 
-    links.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href').substring(1);
-            sections.forEach(section => {
-                section.classList.remove('active');
-                if (section.id === targetId) {
-                    section.classList.add('active');
-                    previousSectionId = targetId;
-                    localStorage.setItem('currentSection', targetId);
+    function setupNavigation() {
+        const topLists = document.querySelectorAll('.content-list.horizontal');
+        const prevButtons = document.querySelectorAll('.prev-btn');
+        const nextButtons = document.querySelectorAll('.next-btn');
+        const scrollStep = 200;
+
+        console.log('setupNavigation called'); // Отладка: вызвана ли функция
+
+        links.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Link clicked:', this.getAttribute('href')); // Отладка: клик по ссылке
+                const targetId = this.getAttribute('href').substring(1);
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                    if (section.id === targetId) {
+                        section.classList.add('active');
+                        console.log('Section activated:', targetId); // Отладка: активирован ли раздел
+                        previousSectionId = targetId;
+                        localStorage.setItem('currentSection', targetId);
+                    }
+                });
+                if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(targetId)) {
+                    setupSearch(targetId);
                 }
             });
-            if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(targetId)) {
-                setupSearch(targetId);
-            }
         });
-    });
+
+        topLists.forEach(list => {
+            list.addEventListener('scroll', () => updateScrollIndicator(list));
+        });
+
+        prevButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const list = this.nextElementSibling;
+                if (list) list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
+            });
+        });
+
+        nextButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const list = this.previousElementSibling;
+                if (list) list.scrollBy({ left: scrollStep, behavior: 'smooth' });
+            });
+        });
+
+        const addButtons = document.querySelectorAll('.add-btn');
+        addButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const section = this.getAttribute('data-section');
+                const settingsSection = document.getElementById('settings');
+                sections.forEach(sec => sec.classList.remove('active'));
+                settingsSection.classList.add('active');
+                previousSectionId = 'settings';
+                localStorage.setItem('currentSection', 'settings');
+                document.getElementById('resource-type').value = section;
+            });
+        });
+    }
 
     document.getElementById('add-resource-form').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -205,6 +247,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function setupSearch(type) {
+        console.log('setupSearch called for:', type); // Отладка: вызвана ли функция поиска
+
         let prefix;
         switch(type) {
             case 'films': prefix = 'film'; break;
@@ -232,7 +276,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const searchBtn = document.getElementById(`${prefix}-search-btn`);
         const contentList = document.getElementById(`${prefix}-content-list`);
 
-        // Проверка наличия всех элементов
         if (!statusEl || !titleEl || !genreEl || !yearEl || !countryEl || !authorEl || !descriptionEl || !charEl || !ratingEl || !searchBtn || !contentList) {
             console.error(`Один или несколько элементов для ${type} не найдены`);
             return;
@@ -249,6 +292,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const description = descriptionEl.value.toLowerCase();
             const characteristics = charEl.value ? [charEl.value] : [];
             const rating = ratingEl.value;
+
+            console.log('Performing search for:', type, { status, title, genre, year, country, author, description, characteristics, rating }); // Отладка: параметры поиска
 
             const transaction = db.transaction(['content'], 'readonly');
             const objectStore = transaction.objectStore('content');
@@ -401,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             };
         };
-    });
+    };
 
     document.getElementById('export-btn').addEventListener('click', function() {
         if (!db) return;
@@ -652,44 +697,6 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'sites': return '#a49ade';
             default: return '#e7d5a6';
         }
-    }
-
-    function setupNavigation() {
-        const topLists = document.querySelectorAll('.content-list.horizontal');
-        const prevButtons = document.querySelectorAll('.prev-btn');
-        const nextButtons = document.querySelectorAll('.next-btn');
-        const scrollStep = 200;
-
-        topLists.forEach(list => {
-            list.addEventListener('scroll', () => updateScrollIndicator(list));
-        });
-
-        prevButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const list = this.nextElementSibling;
-                if (list) list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
-            });
-        });
-
-        nextButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const list = this.previousElementSibling;
-                if (list) list.scrollBy({ left: scrollStep, behavior: 'smooth' });
-            });
-        });
-
-        const addButtons = document.querySelectorAll('.add-btn');
-        addButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const section = this.getAttribute('data-section');
-                const settingsSection = document.getElementById('settings');
-                sections.forEach(sec => sec.classList.remove('active'));
-                settingsSection.classList.add('active');
-                previousSectionId = 'settings';
-                localStorage.setItem('currentSection', 'settings');
-                document.getElementById('resource-type').value = section;
-            });
-        });
     }
 
     function updateScrollIndicator(list) {
