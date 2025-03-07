@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded triggered'); // Проверка: запустился ли скрипт
+
     let db;
     const request = indexedDB.open('MiraMIXDB', 4);
     let previousSectionId = localStorage.getItem('currentSection') || 'top';
@@ -20,10 +22,12 @@ document.addEventListener('DOMContentLoaded', function() {
         initGoogleDrive();
         
         const sections = document.querySelectorAll('.section');
+        console.log('Найдено секций:', sections.length); // Проверка: сколько секций найдено
         sections.forEach(section => {
             section.classList.remove('active');
             if (section.id === previousSectionId) {
                 section.classList.add('active');
+                console.log('Активирована секция по умолчанию:', previousSectionId);
                 if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(previousSectionId)) {
                     setupSearch(previousSectionId);
                 }
@@ -142,23 +146,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const links = document.querySelectorAll('nav a');
 
     function setupNavigation() {
-        const topLists = document.querySelectorAll('.content-list.horizontal');
-        const prevButtons = document.querySelectorAll('.prev-btn');
-        const nextButtons = document.querySelectorAll('.next-btn');
-        const scrollStep = 200;
-
-        console.log('setupNavigation called'); // Отладка: вызвана ли функция
-
-        links.forEach(link => {
+        console.log('setupNavigation called'); // Проверка: вызвана ли функция
+        console.log('Найдено ссылок:', links.length); // Проверка: сколько ссылок найдено
+        links.forEach((link, index) => {
+            console.log(`Link ${index}:`, link.getAttribute('href')); // Проверка: какие ссылки найдены
             link.addEventListener('click', function(e) {
                 e.preventDefault();
-                console.log('Link clicked:', this.getAttribute('href')); // Отладка: клик по ссылке
+                console.log('Link clicked:', this.getAttribute('href')); // Проверка: клик по ссылке
                 const targetId = this.getAttribute('href').substring(1);
                 sections.forEach(section => {
                     section.classList.remove('active');
                     if (section.id === targetId) {
                         section.classList.add('active');
-                        console.log('Section activated:', targetId); // Отладка: активирован ли раздел
+                        console.log('Section activated:', targetId); // Проверка: активирован ли раздел
                         previousSectionId = targetId;
                         localStorage.setItem('currentSection', targetId);
                     }
@@ -168,6 +168,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+
+        const topLists = document.querySelectorAll('.content-list.horizontal');
+        const prevButtons = document.querySelectorAll('.prev-btn');
+        const nextButtons = document.querySelectorAll('.next-btn');
+        const scrollStep = 200;
 
         topLists.forEach(list => {
             list.addEventListener('scroll', () => updateScrollIndicator(list));
@@ -247,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function setupSearch(type) {
-        console.log('setupSearch called for:', type); // Отладка: вызвана ли функция поиска
+        console.log('setupSearch called for:', type); // Проверка: вызвана ли функция поиска
 
         let prefix;
         switch(type) {
@@ -293,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const characteristics = charEl.value ? [charEl.value] : [];
             const rating = ratingEl.value;
 
-            console.log('Performing search for:', type, { status, title, genre, year, country, author, description, characteristics, rating }); // Отладка: параметры поиска
+            console.log('Performing search for:', type, { status, title, genre, year, country, author, description, characteristics, rating });
 
             const transaction = db.transaction(['content'], 'readonly');
             const objectStore = transaction.objectStore('content');
