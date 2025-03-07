@@ -763,7 +763,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const timeDiff = currentTime - lastTime;
                 if (timeDiff > 0) {
-                    velocity = (x - lastX) / timeDiff / 5; // Уменьшаем начальную скорость
+                    velocity = (x - lastX) / timeDiff / 5;
                 }
                 lastX = x;
                 lastTime = currentTime;
@@ -773,16 +773,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!isDragging) return;
                 isDragging = false;
                 if (Math.abs(velocity) > 0.01) {
-                    const initialVelocity = Math.abs(velocity); // Сохраняем начальную скорость
-                    const maxDistance = Math.min(200 + initialVelocity * 200, 400); // Динамическая максимальная дистанция
+                    const initialVelocity = Math.abs(velocity);
+                    const maxDistance = Math.min(200 + initialVelocity * 200, 400);
 
                     function animateScroll() {
                         const currentTime = performance.now();
                         const timeDiff = currentTime - lastTime;
-                        const scrollAmount = velocity * timeDiff * 5; // Минимальная инерция
+                        const scrollAmount = velocity * timeDiff * 5;
                         list.scrollLeft -= scrollAmount;
                         totalDistance += Math.abs(scrollAmount);
-                        velocity *= 0.9; // Плавное затухание
+                        velocity *= 0.9;
 
                         if (totalDistance >= maxDistance || list.scrollLeft <= 0 || list.scrollLeft >= list.scrollWidth - list.clientWidth) {
                             velocity = 0;
@@ -818,6 +818,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
         }
+
+        // Обработка кнопки "Плюс"
+        const addButtons = document.querySelectorAll('.add-btn');
+        addButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const section = this.getAttribute('data-section');
+                const settingsSection = document.getElementById('settings');
+                
+                // Переключаем на раздел "Настройки"
+                sections.forEach(sec => sec.classList.remove('active'));
+                settingsSection.classList.add('active');
+                
+                // Устанавливаем тип ресурса в форме
+                const resourceType = document.getElementById('resource-type');
+                resourceType.value = section;
+            });
+        });
     }
 
     function updateScrollIndicator(list) {
