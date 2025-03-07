@@ -136,49 +136,169 @@ main {
     gap: 10px;
 }
 
-.content-list img {
+.content-list.horizontal {
+    display: flex;
+    overflow-x: auto;
+    gap: 15px;
+    padding-bottom: 10px;
+    scroll-snap-type: x mandatory;
+}
+
+.content-list.horizontal div {
+    flex: 0 0 auto;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.content-list.horizontal div.visible {
+    opacity: 1;
+}
+
+.top-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.prev-btn, .next-btn {
+    background-color: #434448;
+    color: #FFFFFF;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
     border-radius: 4px;
 }
 
-.content-list button {
-    margin-left: 10px;
-    padding: 5px 10px;
-    background-color: inherit;
-    color: #1A1A1D;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+.scroll-indicator {
+    width: 100%;
+    height: 5px;
+    background-color: #333;
+    position: relative;
+    margin-top: 5px;
+    border-radius: 2px;
+}
+
+.scroll-indicator-bar {
+    height: 100%;
+    background-color: #e7d5a6;
+    position: absolute;
+    transition: left 0.3s ease, width 0.3s ease;
+    border-radius: 2px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 500px;
 }
 
 form label {
-    display: block;
-    margin-top: 10px;
     color: #FFFFFF;
 }
 
 form input, form select, form textarea {
-    width: 100%;
-    max-width: 300px;
     padding: 5px;
-    margin-top: 5px;
     background-color: #434448;
     color: #FFFFFF;
     border: none;
     border-radius: 4px;
 }
 
-form textarea {
-    height: 100px;
-    resize: vertical;
-}
-
 form button {
-    margin-top: 20px;
-    padding: 5px 10px;
-    background-color: inherit;
+    padding: 10px;
+    background-color: #e7d5a6;
     color: #1A1A1D;
     border: none;
     border-radius: 4px;
+    cursor: pointer;
+}
+
+button[data-section="films"], button[data-section="cartoons"] {
+    background-color: #de9696;
+}
+
+button[data-section="series"], button[data-section="cartoon-series"] {
+    background-color: #deba8f;
+}
+
+button[data-section="books"] {
+    background-color: #dcde9e;
+}
+
+button[data-section="music"] {
+    background-color: #afdea6;
+}
+
+button[data-section="games"], button[data-section="programs"] {
+    background-color: #82cade;
+}
+
+button[data-section="recipes"] {
+    background-color: #8baade;
+}
+
+button[data-section="sites"] {
+    background-color: #a49ade;
+}
+
+.resource-container {
+    padding: 20px;
+    background-color: #434448;
+    border-radius: 4px;
+}
+
+.resource-header {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.resource-image {
+    width: 200px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.resource-details h2 {
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.resource-details p {
+    margin: 5px 0;
+}
+
+.resource-container button {
+    margin-top: 10px;
+    padding: 10px;
+    color: #1A1A1D;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.back-btn {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #e7d5a6;
+    color: #1A1A1D;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.add-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+    border-radius: 50%;
+    border: none;
+    color: #1A1A1D;
     cursor: pointer;
 }
 
@@ -191,426 +311,30 @@ form button {
     background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
     z-index: 1000;
-    padding: 10px;
-    overflow-y: hidden;
 }
 
 .modal-content {
     background-color: #434448;
     padding: 20px;
-    border-radius: 8px;
-    width: 400px;
-    max-width: 90%;
-    max-height: 80vh;
+    border-radius: 4px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
     overflow-y: auto;
-    box-sizing: border-box;
-}
-
-body.modal-open {
-    overflow: hidden;
+    position: relative;
 }
 
 .close {
-    float: right;
+    position: absolute;
+    top: 10px;
+    right: 10px;
     font-size: 24px;
     cursor: pointer;
     color: #FFFFFF;
 }
 
-.top-section {
-    margin-bottom: 20px;
-    padding: 10px;
-    border-radius: 4px;
-    background-color: #111216;
-}
-
-.top-section h3 {
-    color: #f6efdd;
-}
-
-.top-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    position: relative;
-}
-
-.content-list.horizontal {
-    display: flex;
-    flex-direction: row;
-    overflow-x: auto;
-    gap: 10px;
-    width: 100%;
-    padding: 0;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-x;
-    user-select: none;
-}
-
-.content-list.horizontal::-webkit-scrollbar {
-    display: none;
-}
-
-.content-list.horizontal div {
-    flex: 0 0 auto;
-    width: 200px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 10px;
-    background-color: #434448;
-    border-radius: 4px;
-    min-width: 0;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.5s ease, transform 0.5s ease;
-}
-
-.content-list.horizontal div.visible {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.content-list.horizontal img {
-    width: 100px;
-    height: 150px;
-    border-radius: 4px;
-}
-
-.prev-btn, .next-btn {
-    padding: 5px 10px;
-    background-color: #e7d5a6;
-    color: #1A1A1D;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.scroll-indicator {
-    width: 100%;
-    height: 4px;
-    background-color: #C5C6C7;
-    border-radius: 2px;
-    margin-top: 5px;
-    position: relative;
-}
-
-.scroll-indicator-bar {
-    height: 100%;
-    background-color: #e7d5a6;
-    border-radius: 2px;
-    position: absolute;
-    top: 0;
-    left: 0;
-    transition: width 0.2s ease, left 0.2s ease;
-}
-
-/* Уникальные цвета для разделов */
-#films { background-color: #111216; }
-#films h2 { color: #ffadad; }
-#films .search-menu button, #films .content-list button { background-color: #de9696; }
-
-#cartoons { background-color: #111216; }
-#cartoons h2 { color: #ffadad; }
-#cartoons .search-menu button, #cartoons .content-list button { background-color: #de9696; }
-
-#series { background-color: #111216; }
-#series h2 { color: #ffd6a5; }
-#series .search-menu button, #series .content-list button { background-color: #deba8f; }
-
-#cartoon-series { background-color: #111216; }
-#cartoon-series h2 { color: #ffd6a5; }
-#cartoon-series .search-menu button, #cartoon-series .content-list button { background-color: #deba8f; }
-
-#books { background-color: #111216; }
-#books h2 { color: #fdffb6; }
-#books .search-menu button, #books .content-list button { background-color: #dcde9e; }
-
-#music { background-color: #111216; }
-#music h2 { color: #caffbf; }
-#music .search-menu button, #music .content-list button { background-color: #afdea6; }
-
-#games { background-color: #111216; }
-#games h2 { color: #96e8ff; }
-#games .search-menu button, #games .content-list button { background-color: #82cade; }
-
-#programs { background-color: #111216; }
-#programs h2 { color: #96e8ff; }
-#programs .search-menu button, #programs .content-list button { background-color: #82cade; }
-
-#recipes { background-color: #111216; }
-#recipes h2 { color: #a0c4ff; }
-#recipes .search-menu button, #recipes .content-list button { background-color: #8baade; }
-
-#sites { background-color: #111216; }
-#sites h2 { color: #bdb2ff; }
-#sites .search-menu button, #sites .content-list button { background-color: #a49ade; }
-
-#catalog, #recommendations, #settings { background-color: #111216; }
-#settings h2, #settings h3 { color: #f6efdd; }
-#settings form button { background-color: #e7d5a6; }
-.modal-content form button { background-color: #e7d5a6; }
-
-/* Стили для кнопки "Плюс" */
-.add-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    background-color: #e7d5a6;
-    color: #1A1A1D;
-    border: none;
-    border-radius: 50%;
-    font-size: 24px;
-    cursor: pointer;
-    display: none;
-    z-index: 10;
-}
-
-.section.active .add-btn {
-    display: block;
-}
-
-/* Динамические цвета для кнопки "Плюс" */
-#films.active .add-btn { background-color: #de9696; }
-#cartoons.active .add-btn { background-color: #de9696; }
-#series.active .add-btn { background-color: #deba8f; }
-#cartoon-series.active .add-btn { background-color: #deba8f; }
-#books.active .add-btn { background-color: #dcde9e; }
-#music.active .add-btn { background-color: #afdea6; }
-#games.active .add-btn { background-color: #82cade; }
-#programs.active .add-btn { background-color: #82cade; }
-#recipes.active .add-btn { background-color: #8baade; }
-#sites.active .add-btn { background-color: #a49ade; }
-
-/* Стили для страницы ресурса */
-#resource-page {
-    background-color: #111216;
-}
-
-.resource-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #434448;
-    border-radius: 8px;
-}
-
-.resource-header {
-    display: flex;
-    flex-direction: row;
-    gap: 20px;
-    align-items: flex-start;
-    margin-bottom: 20px;
-}
-
-.resource-image {
-    width: 200px;
-    height: 300px;
-    object-fit: cover;
-    border-radius: 8px;
-}
-
-.resource-details {
-    flex: 1;
-}
-
-.resource-details h2 {
-    margin: 0 0 10px;
-    color: #FFFFFF; /* Изменено на белый по твоему предложению */
-}
-
-.resource-container p {
-    margin: 5px 0;
-}
-
-.resource-container button {
-    margin-top: 10px;
-    margin-right: 10px;
-    padding: 5px 10px;
-    background-color: #e7d5a6; /* Базовый цвет, будет переопределяться через JS */
-    color: #1A1A1D;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.back-btn {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    padding: 10px 20px;
-    background-color: #e7d5a6; /* Базовый цвет, будет переопределяться через JS */
-    color: #1A1A1D;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    z-index: 10;
-}
-
-/* Адаптивный дизайн */
-@media (max-width: 768px) {
-    header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .left-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .main-nav ul {
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
-    }
-
-    .main-nav a {
-        font-size: 16px;
-    }
-
-    .settings-nav ul {
-        width: 100%;
-        justify-content: flex-end;
-    }
-
-    .dropdown-content {
-        position: static;
-        box-shadow: none;
-        width: 100%;
-    }
-
-    main {
-        padding: 10px;
-    }
-
-    .search-menu {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .search-menu label {
-        margin-right: 0;
-    }
-
-    .search-menu select, .search-menu input {
-        margin-right: 0;
-        width: 100%;
-    }
-
-    .content-list div {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-    }
-
-    .content-list img {
-        width: 80px;
-        height: 120px;
-    }
-
-    .content-list button {
-        margin-left: 0;
-        width: 100%;
-    }
-
-    form input, form select, form textarea {
-        max-width: 100%;
-    }
-
-    .modal-content {
-        width: 90%;
-        padding: 15px;
-        max-height: 70vh;
-    }
-
-    .content-list.horizontal {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        touch-action: pan-x;
-    }
-
-    .content-list.horizontal div {
-        width: 150px;
-        min-width: 150px;
-    }
-
-    .content-list.horizontal img {
-        width: 80px;
-        height: 120px;
-    }
-
-    .prev-btn, .next-btn {
-        display: none;
-    }
-
-    .resource-header {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .resource-image {
-        width: 150px;
-        height: 225px;
-    }
-
-    .resource-details {
-        text-align: center;
-    }
-
-    .back-btn {
-        bottom: 10px;
-        left: 10px;
-        padding: 8px 16px;
-    }
-
-    .add-btn {
-        bottom: 70px;
-    }
-}
-
-@media (max-width: 480px) {
-    .logo img {
-        height: 15px;
-    }
-
-    .main-nav a {
-        font-size: 14px;
-    }
-
-    .content-list img {
-        width: 60px;
-        height: 90px;
-    }
-
-    .modal-content {
-        max-height: 60vh;
-    }
-
-    .content-list.horizontal div {
-        width: 120px;
-        min-width: 120px;
-    }
-
-    .content-list.horizontal img {
-        width: 60px;
-        height: 90px;
-    }
-
-    .resource-image {
-        width: 100px;
-        height: 150px;
-    }
-
-    .back-btn {
-        padding: 6px 12px;
-    }
+.modal-open {
+    overflow: hidden;
 }
