@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     let db;
     const request = indexedDB.open('MiraMIXDB', 4);
-    let previousSectionId = 'top'; // Храним предыдущий раздел
+    let previousSectionId = localStorage.getItem('currentSection') || 'top'; // Храним текущий раздел
 
     const CLIENT_ID = '707439660280-hat6arhn868djnimb3bnf418bp2hnjlc.apps.googleusercontent.com';
     const API_KEY = 'AIzaSyDGczTbyZV_CpeEMRpkzPrDPOxwaCR6vbk';
@@ -18,7 +18,18 @@ document.addEventListener('DOMContentLoaded', function() {
         loadTopContent();
         setupNavigation();
         initGoogleDrive();
-        document.querySelector('.section').classList.add('active');
+        
+        // Показываем текущий раздел из localStorage
+        const sections = document.querySelectorAll('.section');
+        sections.forEach(section => {
+            section.classList.remove('active');
+            if (section.id === previousSectionId) {
+                section.classList.add('active');
+                if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(previousSectionId)) {
+                    setupSearch(previousSectionId);
+                }
+            }
+        });
     };
 
     request.onupgradeneeded = function(event) {
@@ -164,7 +175,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 section.classList.remove('active');
                 if (section.id === targetId) {
                     section.classList.add('active');
-                    previousSectionId = targetId; // Обновляем предыдущий раздел
+                    previousSectionId = targetId;
+                    localStorage.setItem('currentSection', targetId); // Сохраняем текущий раздел
                 }
             });
             if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(targetId)) {
@@ -298,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const request = index.getAll(type);
 
             request.onsuccess = function(event) {
-                let results = event.target.result;
+                let results = event.target.result || [];
 
                 if (status) results = results.filter(item => item.status === status);
                 if (title) results = results.filter(item => item.title.toLowerCase().includes(title));
@@ -331,7 +343,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         div.style.cursor = 'pointer';
                         div.addEventListener('click', (e) => {
                             if (!e.target.tagName.match(/BUTTON|IMG/)) {
-                                previousSectionId = type; // Сохраняем текущий раздел
+                                previousSectionId = type;
+                                localStorage.setItem('currentSection', 'resource-page');
                                 showResourcePage(item.id);
                             }
                         });
@@ -357,6 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 sections.forEach(section => section.classList.remove('active'));
                 const returnSection = document.getElementById(previousSectionId);
                 returnSection.classList.add('active');
+                localStorage.setItem('currentSection', previousSectionId);
                 if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(previousSectionId)) {
                     setupSearch(previousSectionId);
                 }
@@ -473,6 +487,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.body.classList.remove('modal-open');
                 loadTopContent();
                 setupSearch(type);
+                if (document.querySelector('.section.active').id === 'resource-page') {
+                    showResourcePage(id);
+                }
             };
             requestUpdate.onerror = function(event) {
                 console.error('Ошибка при обновлении:', event.target.error);
@@ -650,8 +667,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
             } else {
                 alert('Файл miramix_data.json не найден в Google Drive');
-            }
-        } catch (error) {
+            0        } catch (error) {
             console.error('Ошибка загрузки из Drive:', error);
             alert('Ошибка загрузки из Google Drive: ' + error.message);
         }
@@ -719,7 +735,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 div.style.cursor = 'pointer';
                 div.addEventListener('click', (e) => {
                     if (!e.target.tagName.match(/IMG/)) {
-                        previousSectionId = 'top'; // Для ТОПа
+                        previousSectionId = 'top';
+                        localStorage.setItem('currentSection', 'resource-page');
                         showResourcePage(item.id);
                     }
                 });
@@ -771,6 +788,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             sections.forEach(section => section.classList.remove('active'));
             document.getElementById('resource-page').classList.add('active');
+
+            // Устанавливаем динамические цвета кнопок
+            const buttonColor = getButtonColor(item.type);
+            const buttons = resourceContent.querySelectorAll('button');
+            buttons.forEach(button => button.style.backgroundColor = buttonColor);
+            document.querySelector('.back-btn').style.backgroundColor = buttonColor;
         };
     }
 
@@ -778,10 +801,27 @@ document.addEventListener('DOMContentLoaded', function() {
         sections.forEach(section => section.classList.remove('active'));
         const returnSection = document.getElementById(previousSectionId);
         returnSection.classList.add('active');
+        localStorage.setItem('currentSection', previousSectionId);
         if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(previousSectionId)) {
             setupSearch(previousSectionId);
         }
     });
+
+    function getButtonColor(type) {
+        switch (type) {
+            case 'films': return '#de9696';
+            case 'cartoons': return '#de9696';
+            case 'series': return '#deba8f';
+            case 'cartoon-series': return '#deba8f';
+            case 'books': return '#dcde9e';
+            case 'music': return '#afdea6';
+            case 'games': return '#82cade';
+            case 'programs': return '#82cade';
+            case 'recipes': return '#8baade';
+            case 'sites': return '#a49ade';
+            default: return '#e7d5a6';
+        }
+    }
 
     function setupNavigation() {
         const topLists = document.querySelectorAll('.content-list.horizontal');
@@ -903,7 +943,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 sections.forEach(sec => sec.classList.remove('active'));
                 settingsSection.classList.add('active');
-                previousSectionId = 'settings'; // Обновляем предыдущий раздел
+                previousSectionId = 'settings';
+                localStorage.setItem('currentSection', 'settings');
                 
                 const resourceType = document.getElementById('resource-type');
                 resourceType.value = section;
