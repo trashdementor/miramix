@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     let db;
     const request = indexedDB.open('MiraMIXDB', 4);
-    let previousSectionId = localStorage.getItem('currentSection') || 'top'; // Храним текущий раздел
+    let previousSectionId = localStorage.getItem('currentSection') || 'top';
 
     const CLIENT_ID = '707439660280-hat6arhn868djnimb3bnf418bp2hnjlc.apps.googleusercontent.com';
     const API_KEY = 'AIzaSyDGczTbyZV_CpeEMRpkzPrDPOxwaCR6vbk';
@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setupNavigation();
         initGoogleDrive();
         
-        // Показываем текущий раздел из localStorage
         const sections = document.querySelectorAll('.section');
         sections.forEach(section => {
             section.classList.remove('active');
@@ -57,12 +56,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const objectStore = transaction.objectStore('auth');
             const request = objectStore.get('googleAccessToken');
             request.onsuccess = function(event) {
-                const token = event.target.result ? event.target.result.value : null;
-                console.log('Извлечён токен из базы:', token);
-                resolve(token);
+                resolve(event.target.result ? event.target.result.value : null);
             };
             request.onerror = function(event) {
-                console.error('Ошибка получения токена из базы:', event.target.error);
+                console.error('Ошибка получения токена:', event.target.error);
                 resolve(null);
             };
         });
@@ -73,12 +70,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const transaction = db.transaction(['auth'], 'readwrite');
             const objectStore = transaction.objectStore('auth');
             const request = objectStore.put({ key: 'googleAccessToken', value: token });
-            request.onsuccess = function() {
-                console.log('Токен сохранён в базу:', token);
-                resolve();
-            };
+            request.onsuccess = function() { resolve(); };
             request.onerror = function(event) {
-                console.error('Ошибка сохранения токена в базу:', event.target.error);
+                console.error('Ошибка сохранения токена:', event.target.error);
                 resolve();
             };
         });
@@ -86,43 +80,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function initGoogleDrive() {
         gapi.load('client', async () => {
-            try {
-                await gapi.client.init({
-                    apiKey: API_KEY,
-                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-                });
-                console.log('Google Drive API инициализирован');
-
-                tokenClient = google.accounts.oauth2.initTokenClient({
-                    client_id: CLIENT_ID,
-                    scope: SCOPES,
-                    callback: (tokenResponse) => {
-                        if (tokenResponse && tokenResponse.access_token) {
-                            console.log('Получен новый токен:', tokenResponse.access_token);
-                            saveTokenToDB(tokenResponse.access_token);
-                            document.getElementById('auth-google-btn').style.display = 'none';
-                            document.getElementById('save-to-drive-btn').style.display = 'inline';
-                            document.getElementById('load-from-drive-btn').style.display = 'inline';
-                        } else {
-                            console.error('Ошибка авторизации:', tokenResponse);
-                        }
+            await gapi.client.init({
+                apiKey: API_KEY,
+                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+            });
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: (tokenResponse) => {
+                    if (tokenResponse && tokenResponse.access_token) {
+                        saveTokenToDB(tokenResponse.access_token);
+                        document.getElementById('auth-google-btn').style.display = 'none';
+                        document.getElementById('save-to-drive-btn').style.display = 'inline';
+                        document.getElementById('load-from-drive-btn').style.display = 'inline';
                     }
-                });
-
-                const token = await getTokenFromDB();
-                if (token && await isTokenValid(token)) {
-                    console.log('Использован сохранённый токен при инициализации:', token);
-                    document.getElementById('auth-google-btn').style.display = 'none';
-                    document.getElementById('save-to-drive-btn').style.display = 'inline';
-                    document.getElementById('load-from-drive-btn').style.display = 'inline';
-                } else {
-                    console.log('Токен отсутствует или недействителен, требуется авторизация');
-                    document.getElementById('auth-google-btn').addEventListener('click', () => {
-                        tokenClient.requestAccessToken();
-                    });
                 }
-            } catch (error) {
-                console.error('Ошибка инициализации Google API:', error);
+            });
+
+            const token = await getTokenFromDB();
+            if (token && await isTokenValid(token)) {
+                document.getElementById('auth-google-btn').style.display = 'none';
+                document.getElementById('save-to-drive-btn').style.display = 'inline';
+                document.getElementById('load-from-drive-btn').style.display = 'inline';
+            } else {
+                document.getElementById('auth-google-btn').addEventListener('click', () => {
+                    tokenClient.requestAccessToken();
+                });
             }
         });
     }
@@ -130,34 +113,25 @@ document.addEventListener('DOMContentLoaded', function() {
     async function isTokenValid(token) {
         try {
             const response = await fetch('https://www.googleapis.com/drive/v3/about?fields=user', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             return response.ok;
         } catch (error) {
-            console.error('Ошибка при проверке токена:', error);
             return false;
         }
     }
 
     async function getAccessToken() {
         let token = await getTokenFromDB();
-        if (token && await isTokenValid(token)) {
-            console.log('Используется существующий токен:', token);
-            return token;
-        }
+        if (token && await isTokenValid(token)) return token;
 
-        console.log('Токен недействителен или отсутствует, запрашивается новый');
         return new Promise((resolve, reject) => {
             tokenClient.callback = (tokenResponse) => {
                 if (tokenResponse && tokenResponse.access_token) {
-                    console.log('Получен новый токен:', tokenResponse.access_token);
                     saveTokenToDB(tokenResponse.access_token);
                     resolve(tokenResponse.access_token);
                 } else {
-                    console.error('Ошибка получения токена:', tokenResponse);
-                    reject(new Error('Не удалось получить токен доступа'));
+                    reject(new Error('Не удалось получить токен'));
                 }
             };
             tokenClient.requestAccessToken();
@@ -176,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (section.id === targetId) {
                     section.classList.add('active');
                     previousSectionId = targetId;
-                    localStorage.setItem('currentSection', targetId); // Сохраняем текущий раздел
+                    localStorage.setItem('currentSection', targetId);
                 }
             });
             if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(targetId)) {
@@ -187,10 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('add-resource-form').addEventListener('submit', async function(e) {
         e.preventDefault();
-        if (!db) {
-            alert('База данных ещё не готова. Попробуйте позже.');
-            return;
-        }
+        if (!db) return;
 
         const type = document.getElementById('resource-type').value;
         const title = document.getElementById('resource-title').value;
@@ -206,44 +177,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let imageUrl = '';
         if (fileInput.files.length > 0) {
-            try {
-                const formData = new FormData();
-                formData.append('image', fileInput.files[0]);
-                const response = await fetch('https://api.imgbb.com/1/upload?key=0599b64b7b92fc354f0c0b98c3b553ae', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                if (data.success) {
-                    imageUrl = data.data.url;
-                    console.log('Image URL:', imageUrl);
-                    alert('Изображение загружено');
-                } else {
-                    console.error('Ошибка ImgBB:', data);
-                    alert('Ошибка загрузки изображения');
-                    return;
-                }
-            } catch (error) {
-                console.error('Ошибка при загрузке:', error.message);
-                alert('Ошибка загрузки изображения: ' + error.message);
-                return;
-            }
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+            const response = await fetch('https://api.imgbb.com/1/upload?key=0599b64b7b92fc354f0c0b98c3b553ae', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            if (data.success) imageUrl = data.data.url;
         }
 
         const transaction = db.transaction(['content'], 'readwrite');
         const objectStore = transaction.objectStore('content');
         const newItem = {
-            type: type,
-            title: title,
-            genre: genre,
-            year: year,
-            country: country,
-            author: author,
-            description: description,
-            status: status,
+            type, title, genre, year, country, author, description, status,
             characteristics: characteristics ? [characteristics] : [],
-            rating: rating,
-            image: imageUrl
+            rating, image: imageUrl
         };
 
         const saveRequest = objectStore.add(newItem);
@@ -252,10 +201,6 @@ document.addEventListener('DOMContentLoaded', function() {
             e.target.reset();
             loadTopContent();
             setupSearch(type);
-        };
-        saveRequest.onerror = function(event) {
-            console.error('Ошибка при добавлении:', event.target.error);
-            alert('Ошибка при добавлении ресурса');
         };
     });
 
@@ -287,10 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const searchBtn = document.getElementById(`${prefix}-search-btn`);
         const contentList = document.getElementById(`${prefix}-content-list`);
 
-        if (!statusEl || !titleEl || !genreEl || !yearEl || !countryEl || !authorEl || !descriptionEl || !charEl || !ratingEl || !searchBtn || !contentList) {
-            console.error(`Один из элементов для ${type} не найден`);
-            return;
-        }
+        if (!statusEl || !contentList) return;
 
         function performSearch() {
             if (!db) return;
@@ -311,7 +253,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             request.onsuccess = function(event) {
                 let results = event.target.result || [];
-
                 if (status) results = results.filter(item => item.status === status);
                 if (title) results = results.filter(item => item.title.toLowerCase().includes(title));
                 if (genre) results = results.filter(item => item.genre && item.genre.toLowerCase().includes(genre));
@@ -332,12 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const div = document.createElement('div');
                         const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;" loading="lazy">` : 'Нет изображения';
                         const genreText = item.genre ? `Жанр: ${item.genre}` : '';
-                        const yearText = item.year ? `Год: ${item.year}` : '';
-                        const countryText = item.country ? `Страна: ${item.country}` : '';
-                        const authorText = item.author ? `${type === 'books' || type === 'music' ? 'Автор' : 'Разработчик'}: ${item.author}` : '';
-                        const descText = item.description ? `Описание: ${item.description}` : '';
-                        div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} - Характеристика: ${item.characteristics.join(', ') || 'Нет'} 
-                            ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''} 
+                        div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} 
                             <button onclick="deleteItem(${item.id}, '${type}')">Удалить</button>
                             <button onclick="editItem(${item.id}, '${type}')">Изменить</button>`;
                         div.style.cursor = 'pointer';
@@ -371,9 +307,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const returnSection = document.getElementById(previousSectionId);
                 returnSection.classList.add('active');
                 localStorage.setItem('currentSection', previousSectionId);
-                if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(previousSectionId)) {
-                    setupSearch(previousSectionId);
-                }
+                setupSearch(previousSectionId);
             } else {
                 setupSearch(type);
             }
@@ -381,7 +315,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     };
 
-    window.editItem = async function(id, type) {
+    window.editItem = function(id, type) {
         if (!db) return;
         const transaction = db.transaction(['content'], 'readonly');
         const objectStore = transaction.objectStore('content');
@@ -389,8 +323,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         request.onsuccess = function(event) {
             const item = event.target.result;
-            if (!item) return;
-
             document.getElementById('edit-id').value = item.id;
             document.getElementById('edit-type').value = item.type;
             document.getElementById('edit-title').value = item.title;
@@ -403,16 +335,10 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('edit-characteristics').value = item.characteristics[0] || '';
             document.getElementById('edit-rating').value = item.rating;
 
-            const modal = document.getElementById('edit-modal');
-            modal.style.display = 'block';
+            document.getElementById('edit-modal').style.display = 'block';
             document.body.classList.add('modal-open');
         };
     };
-
-    document.getElementById('close-modal').addEventListener('click', function() {
-        document.getElementById('edit-modal').style.display = 'none';
-        document.body.classList.remove('modal-open');
-    });
 
     document.getElementById('edit-resource-form').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -433,28 +359,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let imageUrl = '';
         if (fileInput.files.length > 0) {
-            try {
-                const formData = new FormData();
-                formData.append('image', fileInput.files[0]);
-                const response = await fetch('https://api.imgbb.com/1/upload?key=0599b64b7b92fc354f0c0b98c3b553ae', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await response.json();
-                if (data.success) {
-                    imageUrl = data.data.url;
-                    console.log('Image URL:', imageUrl);
-                    alert('Изображение загружено');
-                } else {
-                    console.error('Ошибка ImgBB:', data);
-                    alert('Ошибка загрузки изображения');
-                    return;
-                }
-            } catch (error) {
-                console.error('Ошибка при загрузке:', error.message);
-                alert('Ошибка загрузки изображения: ' + error.message);
-                return;
-            }
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+            const response = await fetch('https://api.imgbb.com/1/upload?key=0599b64b7b92fc354f0c0b98c3b553ae', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            if (data.success) imageUrl = data.data.url;
         }
 
         const transaction = db.transaction(['content'], 'readwrite');
@@ -463,21 +375,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         requestGet.onsuccess = function(event) {
             const item = event.target.result;
-            if (!item) return;
-
             const updatedItem = {
-                id: id,
-                type: type,
-                title: title,
-                genre: genre,
-                year: year,
-                country: country,
-                author: author,
-                description: description,
-                status: status,
+                id, type, title, genre, year, country, author, description, status,
                 characteristics: characteristics ? [characteristics] : [],
-                rating: rating,
-                image: imageUrl || item.image
+                rating, image: imageUrl || item.image
             };
 
             const requestUpdate = objectStore.put(updatedItem);
@@ -491,19 +392,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     showResourcePage(id);
                 }
             };
-            requestUpdate.onerror = function(event) {
-                console.error('Ошибка при обновлении:', event.target.error);
-                alert('Ошибка при обновлении ресурса');
-            };
         };
     });
 
     document.getElementById('export-btn').addEventListener('click', function() {
-        if (!db) {
-            alert('База данных ещё не готова.');
-            return;
-        }
-
+        if (!db) return;
         const transaction = db.transaction(['content'], 'readonly');
         const objectStore = transaction.objectStore('content');
         const request = objectStore.getAll();
@@ -516,66 +409,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const a = document.createElement('a');
             a.href = url;
             a.download = 'miramix_data.json';
-            document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            alert('Данные экспортированы в файл miramix_data.json');
         };
-    });
-
-    document.getElementById('import-btn').addEventListener('click', function() {
-        document.getElementById('import-file').click();
-    });
-
-    document.getElementById('import-file').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            try {
-                const data = JSON.parse(event.target.result);
-                if (!Array.isArray(data)) {
-                    alert('Неверный формат файла. Ожидается массив данных.');
-                    return;
-                }
-
-                const transaction = db.transaction(['content'], 'readwrite');
-                const objectStore = transaction.objectStore('content');
-
-                objectStore.clear().onsuccess = function() {
-                    data.forEach(item => {
-                        objectStore.add(item);
-                    });
-
-                    transaction.oncomplete = function() {
-                        alert('Данные успешно импортированы');
-                        loadTopContent();
-                        const currentSection = document.querySelector('.section.active').id;
-                        if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(currentSection)) {
-                            setupSearch(currentSection);
-                        }
-                    };
-                    transaction.onerror = function(event) {
-                        console.error('Ошибка при импорте:', event.target.error);
-                        alert('Ошибка при импорте данных');
-                    };
-                };
-            } catch (error) {
-                console.error('Ошибка парсинга JSON:', error);
-                alert('Ошибка при чтении файла: ' + error.message);
-            }
-        };
-        reader.readAsText(file);
     });
 
     document.getElementById('save-to-drive-btn').addEventListener('click', async function() {
-        if (!db) {
-            alert('База данных ещё не готова.');
-            return;
-        }
-
+        if (!db) return;
         const transaction = db.transaction(['content'], 'readonly');
         const objectStore = transaction.objectStore('content');
         const request = objectStore.getAll();
@@ -584,39 +424,24 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = event.target.result;
             const json = JSON.stringify(data, null, 2);
             const blob = new Blob([json], { type: 'application/json' });
+            const accessToken = await getAccessToken();
+            gapi.client.setToken({ access_token: accessToken });
 
-            try {
-                const accessToken = await getAccessToken();
-                gapi.client.setToken({ access_token: accessToken });
+            const fileMetadata = { name: 'miramix_data.json', mimeType: 'application/json' };
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
+            form.append('file', blob);
 
-                const fileMetadata = {
-                    name: 'miramix_data.json',
-                    mimeType: 'application/json'
-                };
+            const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${accessToken}` },
+                body: form
+            });
 
-                const form = new FormData();
-                form.append('metadata', new Blob([JSON.stringify(fileMetadata)], { type: 'application/json' }));
-                form.append('file', blob);
-
-                const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`
-                    },
-                    body: form
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Ошибка загрузки файла: ${response.status} - ${errorText}`);
-                }
-
-                const result = await response.json();
-                console.log('Файл успешно сохранён:', result);
-                alert('Данные успешно сохранены в Google Drive как miramix_data.json');
-            } catch (error) {
-                console.error('Ошибка при сохранении в Google Drive:', error);
-                alert('Ошибка при сохранении: ' + error.message);
+            if (response.ok) {
+                alert('Данные сохранены в Google Drive');
+            } else {
+                alert('Ошибка сохранения в Google Drive');
             }
         };
     });
@@ -625,9 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const accessToken = await getAccessToken();
             const listResponse = await fetch('https://www.googleapis.com/drive/v3/files?q=name%3D%27miramix_data.json%27&fields=files(id,name,createdTime)&orderBy=createdTime%20desc', {
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
+                headers: { 'Authorization': `Bearer ${accessToken}` }
             });
 
             if (!listResponse.ok) throw new Error('Ошибка поиска файла');
@@ -636,9 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (files && files.length > 0) {
                 const fileId = files[0].id;
                 const fileResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`
-                    }
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
 
                 if (!fileResponse.ok) throw new Error('Ошибка загрузки файла');
@@ -652,12 +473,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const objectStore = transaction.objectStore('content');
 
                 objectStore.clear().onsuccess = function() {
-                    data.forEach(item => {
-                        objectStore.add(item);
-                    });
-
+                    data.forEach(item => objectStore.add(item));
                     transaction.oncomplete = function() {
-                        alert('Данные успешно загружены из Google Drive');
+                        alert('Данные загружены из Google Drive');
                         loadTopContent();
                         const currentSection = document.querySelector('.section.active').id;
                         if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(currentSection)) {
@@ -667,7 +485,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
             } else {
                 alert('Файл miramix_data.json не найден в Google Drive');
-            0        } catch (error) {
+            }
+        } catch (error) {
             console.error('Ошибка загрузки из Drive:', error);
             alert('Ошибка загрузки из Google Drive: ' + error.message);
         }
@@ -675,7 +494,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadTopContent() {
         if (!db) return;
-
         const types = [
             { type: 'films', limit: 15, listId: 'top-films-list' },
             { type: 'cartoons', limit: 15, listId: 'top-cartoons-list' },
@@ -708,44 +526,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const allowedStatuses = ['🌕', '🌗'];
         let filteredItems = items.filter(item => allowedStatuses.includes(item.status));
-
         const ratings = { '💀': 0, '💩': 1, '🍋': 2, '🍅': 3, '🍊': 4, '🍒': 5, '🌽': 6, '🧅': 7 };
-        filteredItems = filteredItems.filter(item => {
-            const ratingValue = ratings[item.rating];
-            return ratingValue >= 4 && ratingValue <= 7;
-        });
-
+        filteredItems = filteredItems.filter(item => ratings[item.rating] >= 4);
         filteredItems.sort((a, b) => ratings[b.rating] - ratings[a.rating]);
         const topItems = filteredItems.slice(0, limit);
 
         list.innerHTML = '';
-        if (topItems.length === 0) {
-            list.innerHTML = '<p>Нет элементов, соответствующих критериям</p>';
-        } else {
-            topItems.forEach((item, index) => {
-                const div = document.createElement('div');
-                const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;" loading="lazy">` : 'Нет изображения';
-                const genreText = item.genre ? `Жанр: ${item.genre}` : '';
-                const yearText = item.year ? `Год: ${item.year}` : '';
-                const countryText = item.country ? `Страна: ${item.country}` : '';
-                const authorText = item.author ? `${item.type === 'books' || item.type === 'music' ? 'Автор' : 'Разработчик'}: ${item.author}` : '';
-                const descText = item.description ? `Описание: ${item.description}` : '';
-                div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} - Характеристика: ${item.characteristics.join(', ') || 'Нет'} 
-                    ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''}`;
-                div.style.cursor = 'pointer';
-                div.addEventListener('click', (e) => {
-                    if (!e.target.tagName.match(/IMG/)) {
-                        previousSectionId = 'top';
-                        localStorage.setItem('currentSection', 'resource-page');
-                        showResourcePage(item.id);
-                    }
-                });
-                list.appendChild(div);
-                setTimeout(() => {
-                    div.classList.add('visible');
-                }, index * 100);
+        topItems.forEach((item, index) => {
+            const div = document.createElement('div');
+            const img = item.image ? `<img src="${item.image}" alt="${item.title}" style="width: 100px; height: 150px;" loading="lazy">` : 'Нет изображения';
+            div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating}`;
+            div.style.cursor = 'pointer';
+            div.addEventListener('click', () => {
+                previousSectionId = 'top';
+                localStorage.setItem('currentSection', 'resource-page');
+                showResourcePage(item.id);
             });
-        }
+            list.appendChild(div);
+            setTimeout(() => div.classList.add('visible'), index * 100);
+        });
 
         updateScrollIndicator(list);
     }
@@ -758,15 +557,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         request.onsuccess = function(event) {
             const item = event.target.result;
-            if (!item) return;
-
             const resourceContent = document.getElementById('resource-content');
             const img = item.image ? `<img src="${item.image}" alt="${item.title}" class="resource-image">` : 'Нет изображения';
-            const genreText = item.genre ? `<p>Жанр: ${item.genre}</p>` : '';
-            const yearText = item.year ? `<p>Год: ${item.year}</p>` : '';
-            const countryText = item.country ? `<p>Страна: ${item.country}</p>` : '';
-            const authorText = item.author ? `<p>${item.type === 'books' || item.type === 'music' ? 'Автор' : 'Режиссёр/Создатель'}: ${item.author}</p>` : '';
-            const descText = item.description ? `<p>Описание: ${item.description}</p>` : '';
             resourceContent.innerHTML = `
                 <div class="resource-header">
                     ${img}
@@ -775,13 +567,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p>Статус: ${item.status}</p>
                         <p>Оценка: ${item.rating}</p>
                         <p>Характеристика: ${item.characteristics.join(', ') || 'Нет'}</p>
-                        ${genreText}
-                        ${yearText}
-                        ${countryText}
-                        ${authorText}
                     </div>
                 </div>
-                ${descText}
                 <button onclick="deleteItem(${item.id}, '${item.type}')">Удалить</button>
                 <button onclick="editItem(${item.id}, '${item.type}')">Изменить</button>
             `;
@@ -789,7 +576,6 @@ document.addEventListener('DOMContentLoaded', function() {
             sections.forEach(section => section.classList.remove('active'));
             document.getElementById('resource-page').classList.add('active');
 
-            // Устанавливаем динамические цвета кнопок
             const buttonColor = getButtonColor(item.type);
             const buttons = resourceContent.querySelectorAll('button');
             buttons.forEach(button => button.style.backgroundColor = buttonColor);
@@ -828,126 +614,35 @@ document.addEventListener('DOMContentLoaded', function() {
         const prevButtons = document.querySelectorAll('.prev-btn');
         const nextButtons = document.querySelectorAll('.next-btn');
         const scrollStep = 200;
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         topLists.forEach(list => {
-            let startX = 0;
-            let scrollLeft = 0;
-            let isDragging = false;
-            let velocity = 0;
-            let lastX = 0;
-            let lastTime = 0;
-            let animationFrameId = null;
-            let totalDistance = 0;
-
-            list.addEventListener('mousedown', startDragging);
-            list.addEventListener('mousemove', drag);
-            list.addEventListener('mouseup', stopDragging);
-            list.addEventListener('mouseleave', stopDragging);
-
-            list.addEventListener('touchstart', startDragging, { passive: true });
-            list.addEventListener('touchmove', drag, { passive: false });
-            list.addEventListener('touchend', stopDragging, { passive: true });
-
             list.addEventListener('scroll', () => updateScrollIndicator(list));
-
-            if (!isMobile) {
-                list.addEventListener('wheel', (e) => {
-                    e.preventDefault();
-                    const delta = e.deltaY || e.deltaX;
-                    list.scrollBy({ left: delta * 2, behavior: 'smooth' });
-                });
-            }
-
-            function startDragging(e) {
-                isDragging = true;
-                startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-                scrollLeft = list.scrollLeft;
-                lastX = startX;
-                lastTime = performance.now();
-                totalDistance = 0;
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            }
-
-            function drag(e) {
-                if (!isDragging) return;
-                e.preventDefault();
-                const x = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-                const currentTime = performance.now();
-                const delta = x - startX;
-                list.scrollLeft = scrollLeft - delta;
-
-                const timeDiff = currentTime - lastTime;
-                if (timeDiff > 0) {
-                    velocity = (x - lastX) / timeDiff / 5;
-                }
-                lastX = x;
-                lastTime = currentTime;
-            }
-
-            function stopDragging() {
-                if (!isDragging) return;
-                isDragging = false;
-                if (Math.abs(velocity) > 0.01) {
-                    const initialVelocity = Math.abs(velocity);
-                    const maxDistance = Math.min(200 + initialVelocity * 200, 400);
-
-                    function animateScroll() {
-                        const currentTime = performance.now();
-                        const timeDiff = currentTime - lastTime;
-                        const scrollAmount = velocity * timeDiff * 5;
-                        list.scrollLeft -= scrollAmount;
-                        totalDistance += Math.abs(scrollAmount);
-                        velocity *= 0.9;
-
-                        if (totalDistance >= maxDistance || list.scrollLeft <= 0 || list.scrollLeft >= list.scrollWidth - list.clientWidth) {
-                            velocity = 0;
-                        }
-
-                        if (Math.abs(velocity) > 0.01 && totalDistance < maxDistance) {
-                            lastTime = currentTime;
-                            animationFrameId = requestAnimationFrame(animateScroll);
-                        }
-                    }
-                    lastTime = performance.now();
-                    animationFrameId = requestAnimationFrame(animateScroll);
-                }
-            }
         });
 
-        if (!isMobile) {
-            prevButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const list = this.nextElementSibling;
-                    if (list) {
-                        list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
-                    }
-                });
+        prevButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const list = this.nextElementSibling;
+                if (list) list.scrollBy({ left: -scrollStep, behavior: 'smooth' });
             });
+        });
 
-            nextButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const list = this.previousElementSibling;
-                    if (list) {
-                        list.scrollBy({ left: scrollStep, behavior: 'smooth' });
-                    }
-                });
+        nextButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const list = this.previousElementSibling;
+                if (list) list.scrollBy({ left: scrollStep, behavior: 'smooth' });
             });
-        }
+        });
 
         const addButtons = document.querySelectorAll('.add-btn');
         addButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const section = this.getAttribute('data-section');
                 const settingsSection = document.getElementById('settings');
-                
                 sections.forEach(sec => sec.classList.remove('active'));
                 settingsSection.classList.add('active');
                 previousSectionId = 'settings';
                 localStorage.setItem('currentSection', 'settings');
-                
-                const resourceType = document.getElementById('resource-type');
-                resourceType.value = section;
+                document.getElementById('resource-type').value = section;
             });
         });
     }
