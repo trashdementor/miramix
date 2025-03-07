@@ -376,6 +376,18 @@ body.modal-open {
     display: block;
 }
 
+/* Динамические цвета для кнопки "Плюс" */
+#films.active .add-btn { background-color: #de9696; }
+#cartoons.active .add-btn { background-color: #de9696; }
+#series.active .add-btn { background-color: #deba8f; }
+#cartoon-series.active .add-btn { background-color: #deba8f; }
+#books.active .add-btn { background-color: #dcde9e; }
+#music.active .add-btn { background-color: #afdea6; }
+#games.active .add-btn { background-color: #82cade; }
+#programs.active .add-btn { background-color: #82cade; }
+#recipes.active .add-btn { background-color: #8baade; }
+#sites.active .add-btn { background-color: #a49ade; }
+
 /* Стили для страницы ресурса */
 #resource-page {
     background-color: #111216;
@@ -410,7 +422,7 @@ body.modal-open {
 
 .resource-details h2 {
     margin: 0 0 10px;
-    color: #f6efdd;
+    color: #FFFFFF; /* Изменено на белый по твоему предложению */
 }
 
 .resource-container p {
@@ -421,7 +433,7 @@ body.modal-open {
     margin-top: 10px;
     margin-right: 10px;
     padding: 5px 10px;
-    background-color: #e7d5a6;
+    background-color: #e7d5a6; /* Базовый цвет, будет переопределяться через JS */
     color: #1A1A1D;
     border: none;
     border-radius: 4px;
@@ -433,7 +445,7 @@ body.modal-open {
     bottom: 20px;
     left: 20px;
     padding: 10px 20px;
-    background-color: #e7d5a6;
+    background-color: #e7d5a6; /* Базовый цвет, будет переопределяться через JS */
     color: #1A1A1D;
     border: none;
     border-radius: 4px;
