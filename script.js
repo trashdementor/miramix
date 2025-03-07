@@ -326,6 +326,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''} 
                             <button onclick="deleteItem(${item.id}, '${type}')">Удалить</button>
                             <button onclick="editItem(${item.id}, '${type}')">Изменить</button>`;
+                        div.style.cursor = 'pointer';
+                        div.addEventListener('click', (e) => {
+                            if (!e.target.tagName.match(/BUTTON|IMG/)) {
+                                showResourcePage(item.id);
+                            }
+                        });
                         contentList.appendChild(div);
                     });
                 }
@@ -697,6 +703,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const descText = item.description ? `Описание: ${item.description}` : '';
                 div.innerHTML = `${img} ${item.title} - ${item.status} - Оценка: ${item.rating} - Характеристика: ${item.characteristics.join(', ') || 'Нет'} 
                     ${genreText ? '<br>' + genreText : ''} ${yearText ? '<br>' + yearText : ''} ${countryText ? '<br>' + countryText : ''} ${authorText ? '<br>' + authorText : ''} ${descText ? '<br>' + descText : ''}`;
+                div.style.cursor = 'pointer';
+                div.addEventListener('click', (e) => {
+                    if (!e.target.tagName.match(/IMG/)) {
+                        showResourcePage(item.id);
+                    }
+                });
                 list.appendChild(div);
                 setTimeout(() => {
                     div.classList.add('visible');
@@ -706,6 +718,58 @@ document.addEventListener('DOMContentLoaded', function() {
 
         updateScrollIndicator(list);
     }
+
+    function showResourcePage(id) {
+        if (!db) return;
+        const transaction = db.transaction(['content'], 'readonly');
+        const objectStore = transaction.objectStore('content');
+        const request = objectStore.get(id);
+
+        request.onsuccess = function(event) {
+            const item = event.target.result;
+            if (!item) return;
+
+            const resourceContent = document.getElementById('resource-content');
+            const img = item.image ? `<img src="${item.image}" alt="${item.title}" class="resource-image">` : 'Нет изображения';
+            const genreText = item.genre ? `<p>Жанр: ${item.genre}</p>` : '';
+            const yearText = item.year ? `<p>Год: ${item.year}</p>` : '';
+            const countryText = item.country ? `<p>Страна: ${item.country}</p>` : '';
+            const authorText = item.author ? `<p>${item.type === 'books' || item.type === 'music' ? 'Автор' : 'Режиссёр/Создатель'}: ${item.author}</p>` : '';
+            const descText = item.description ? `<p>Описание: ${item.description}</p>` : '';
+            resourceContent.innerHTML = `
+                <div class="resource-header">
+                    ${img}
+                    <div class="resource-details">
+                        <h2>${item.title}</h2>
+                        <p>Статус: ${item.status}</p>
+                        <p>Оценка: ${item.rating}</p>
+                        <p>Характеристика: ${item.characteristics.join(', ') || 'Нет'}</p>
+                        ${genreText}
+                        ${yearText}
+                        ${countryText}
+                        ${authorText}
+                    </div>
+                </div>
+                ${descText}
+                <button onclick="editItem(${item.id}, '${item.type}')">Изменить</button>
+                <button onclick="deleteItem(${item.id}, '${item.type}')">Удалить</button>
+            `;
+
+            sections.forEach(section => section.classList.remove('active'));
+            document.getElementById('resource-page').classList.add('active');
+        };
+    }
+
+    document.querySelector('.back-btn').addEventListener('click', function() {
+        const currentSection = document.querySelector('.section.active');
+        const previousSectionId = currentSection.id === 'resource-page' ? 'top' : currentSection.id;
+        sections.forEach(section => section.classList.remove('active'));
+        const previousSection = document.getElementById(previousSectionId);
+        previousSection.classList.add('active');
+        if (['films', 'cartoons', 'series', 'cartoon-series', 'books', 'music', 'games', 'programs', 'recipes', 'sites'].includes(previousSectionId)) {
+            setupSearch(previousSectionId);
+        }
+    });
 
     function setupNavigation() {
         const topLists = document.querySelectorAll('.content-list.horizontal');
