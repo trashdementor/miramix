@@ -391,6 +391,7 @@ body.modal-open {
 
 .resource-header {
     display: flex;
+    flex-direction: row;
     gap: 20px;
     align-items: flex-start;
     margin-bottom: 20px;
